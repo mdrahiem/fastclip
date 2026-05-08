@@ -3,7 +3,11 @@ import { z } from "zod";
 export const TextLayerSchema = z.object({
   type: z.literal("text"),
   role: z.enum(["hook", "body", "cta", "label"]),
-  text: z.string().min(1).max(320),
+  /** Trimmed and trimmed to 500 chars so minor LLM overflow still validates. */
+  text: z.preprocess(
+    (v) => (typeof v === "string" ? v.trim().slice(0, 500) : v),
+    z.string().min(1).max(500),
+  ),
   region: z.enum(["top", "center", "bottom"]),
 });
 
@@ -20,12 +24,16 @@ export const LayerSchema = z.discriminatedUnion("type", [
 ]);
 
 export const SlideSchema = z.object({
-  index: z.number().int().min(0),
+  /** Models sometimes emit string indices; coerce. */
+  index: z.coerce.number().int().min(0),
   layers: z.array(LayerSchema).min(1).max(8),
 });
 
 export const SlidePlanSchema = z.object({
-  slidePlanVersion: z.literal(1),
+  /** Models often send `"1"`; accept and normalize. */
+  slidePlanVersion: z
+    .union([z.literal(1), z.literal("1")])
+    .transform(() => 1 as const),
   meta: z
     .object({
       title: z.string().max(120).optional(),

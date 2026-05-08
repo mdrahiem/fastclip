@@ -7,10 +7,39 @@ export class SlidePlanValidationError extends Error {
   }
 }
 
+/**
+ * Strips markdown fences and surrounding prose so `JSON.parse` sees one object.
+ * OpenRouter / chat models often wrap the payload in ```json ... ```.
+ */
+export function extractJsonObjectFromModelText(raw: string): string {
+  let s = raw.trim();
+  if (!s) return s;
+
+  const fenceBlock = /^```(?:json)?\s*\n?([\s\S]*?)\n?```$/im;
+  const blockMatch = s.match(fenceBlock);
+  if (blockMatch?.[1]) {
+    s = blockMatch[1].trim();
+  } else if (s.startsWith("```")) {
+    s = s
+      .replace(/^```(?:json)?\s*\n?/i, "")
+      .replace(/\n?```\s*$/i, "")
+      .trim();
+  }
+
+  const start = s.indexOf("{");
+  const end = s.lastIndexOf("}");
+  if (start >= 0 && end > start) {
+    s = s.slice(start, end + 1);
+  }
+
+  return s.trim();
+}
+
 export function parseSlidePlanJson(raw: string): SlidePlan {
+  const extracted = extractJsonObjectFromModelText(raw);
   let parsed: unknown;
   try {
-    parsed = JSON.parse(raw);
+    parsed = JSON.parse(extracted);
   } catch {
     throw new SlidePlanValidationError("Slide plan JSON could not be parsed.");
   }

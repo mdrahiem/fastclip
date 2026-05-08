@@ -55,20 +55,39 @@ export async function planPost(input: PlanPostInput): Promise<SlidePlan> {
   const system = buildPlannerSystemPrompt(template);
   const user = buildPlannerUserPrompt(input.postText);
 
-  let raw = "";
-  try {
+  const runCompletion = async (
+    messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
+  ): Promise<string> => {
     const response = await client.chat.completions.create({
       model: input.model,
-      temperature: 0.4,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
+      temperature: 0.35,
+      messages,
     });
-
-    raw = response.choices[0]?.message?.content ?? "";
-    if (!raw) {
+    const content = response.choices[0]?.message?.content ?? "";
+    if (!content) {
       throw new PlannerError("The model returned an empty response.");
+    }
+    return content;
+  };
+
+  const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+    { role: "system", content: system },
+    { role: "user", content: user },
+  ];
+
+  try {
+    let raw = await runCompletion(messages);
+    try {
+      return finalizePlanFromModelJson(raw, input.templateId);
+    } catch {
+      messages.push({ role: "assistant", content: raw });
+      messages.push({
+        role: "user",
+        content:
+          "That output failed validation. Reply with ONLY one JSON object (no markdown, no prose). Rules: slidePlanVersion is the number 1; each slide.index is a number in order starting at 0; each layer has type \"text\" or \"shape\"; text.role is hook, body, cta, or label; text.region and shape.region are top, center, or bottom; shape.shape is circle, rect, or line.",
+      });
+      raw = await runCompletion(messages);
+      return finalizePlanFromModelJson(raw, input.templateId);
     }
   } catch (err) {
     if (err instanceof PlannerError) throw err;
@@ -76,6 +95,4 @@ export async function planPost(input: PlanPostInput): Promise<SlidePlan> {
       err instanceof Error ? err.message : "LLM request failed.",
     );
   }
-
-  return finalizePlanFromModelJson(raw, input.templateId);
 }
