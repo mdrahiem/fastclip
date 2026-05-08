@@ -277,6 +277,23 @@ export default function WizardPage() {
                   Step: <code>{status.step}</code>
                 </div>
               ) : null}
+              {status.step === "rendering" ? (
+                <p style={{ marginTop: "10px", fontSize: "0.875rem", color: "#64748b" }}>
+                  Bundling and encoding can take a long time on the first run (often 10–20+ minutes).
+                  Keep this terminal&apos;s worker running; later videos reuse the bundle and are faster.
+                </p>
+              ) : null}
+              {status.step === "planning" ? (
+                <p style={{ marginTop: "10px", fontSize: "0.875rem", color: "#64748b" }}>
+                  Calling the language model to structure your slides…
+                </p>
+              ) : null}
+              {status.status === "queued" ? (
+                <p style={{ marginTop: "10px", fontSize: "0.875rem", color: "#64748b" }}>
+                  Waiting for the job worker — run{" "}
+                  <code style={{ fontSize: "0.8rem" }}>pnpm --filter @video-gen/web worker</code>.
+                </p>
+              ) : null}
               {status.errorMessage ? (
                 <p style={{ color: "#b45309", marginTop: "8px" }}>
                   {status.errorMessage}

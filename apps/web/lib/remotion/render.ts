@@ -43,12 +43,22 @@ const ffmpegOverride: FfmpegOverrideFn = ({ args }) => [
   "yuv420p",
 ];
 
+/** Reuse Webpack bundle across jobs in this Node process (first render still pays bundle cost once). */
+const bundleServeUrlCache = new Map<string, Promise<string>>();
+
+function getCachedServeUrl(entryPoint: string): Promise<string> {
+  let pending = bundleServeUrlCache.get(entryPoint);
+  if (!pending) {
+    pending = bundle({ entryPoint });
+    bundleServeUrlCache.set(entryPoint, pending);
+  }
+  return pending;
+}
+
 export async function renderLinkedInPostVideo(
   req: RenderRequest,
 ): Promise<void> {
-  const serveUrl = await bundle({
-    entryPoint: req.remotionEntry,
-  });
+  const serveUrl = await getCachedServeUrl(req.remotionEntry);
 
   const composition = await selectComposition({
     serveUrl,
