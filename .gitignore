@@ -1,0 +1,9 @@
+node_modules
+.next
+.turbo
+dist
+coverage
+data/*
+!data/.gitkeep
+.env
+.DS_Store
