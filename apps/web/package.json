@@ -12,12 +12,14 @@
     "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@remotion/bundler": "^4.0.331",
     "@remotion/renderer": "^4.0.331",
     "@video-gen/contracts": "workspace:*",
     "@video-gen/planner": "workspace:*",
     "better-sqlite3": "^12.9.0",
     "drizzle-orm": "^0.45.2",
+    "fluent-ffmpeg": "^2.1.3",
     "next": "^15",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -26,6 +28,7 @@
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
+    "@types/fluent-ffmpeg": "^2.1.28",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
