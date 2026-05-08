@@ -12,9 +12,9 @@ COPY . .
 
 RUN pnpm install --frozen-lockfile
 
-ARG BUILD_OPENAI_API_KEY=dummy-openai-key-for-image-build
+ARG BUILD_OPENROUTER_API_KEY=dummy-openrouter-key-for-image-build
 ARG BUILD_SESSION_SECRET=docker-build-dummy-session-secret-32chars-min
-RUN OPENAI_API_KEY="${BUILD_OPENAI_API_KEY}" \
+RUN OPENROUTER_API_KEY="${BUILD_OPENROUTER_API_KEY}" \
     SESSION_SECRET="${BUILD_SESSION_SECRET}" \
     pnpm --filter @video-gen/web build
 

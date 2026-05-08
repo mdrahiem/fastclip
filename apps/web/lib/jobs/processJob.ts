@@ -12,7 +12,7 @@ import "../audio/normalize";
 import { normalizeMusicToAac } from "../audio/normalize";
 import { getDb } from "../db";
 import { jobs } from "../db/schema";
-import { getEnv } from "../env";
+import { getEnv, getLlmConfig } from "../env";
 import { renderLinkedInPostVideo, resolveDefaultRemotionEntry } from "../remotion/render";
 import {
   getBuiltinMusicFilePath,
@@ -128,9 +128,12 @@ export async function processJob(jobId: string): Promise<void> {
     const templateId = row.templateId as VideoTemplate["id"];
     const template = getTemplateById(templateId);
 
+    const llm = getLlmConfig(env);
     const slidePlan: SlidePlan = await planPost({
-      openaiApiKey: env.OPENAI_API_KEY,
-      model: env.OPENAI_MODEL,
+      apiKey: llm.apiKey,
+      baseURL: llm.baseURL,
+      defaultHeaders: llm.defaultHeaders,
+      model: llm.model,
       templateId,
       postText: row.postText,
     });

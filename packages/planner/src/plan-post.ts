@@ -17,7 +17,11 @@ export class PlannerError extends Error {
 }
 
 export type PlanPostInput = {
-  openaiApiKey: string;
+  /** API key for an OpenAI-compatible endpoint (OpenAI or OpenRouter). */
+  apiKey: string;
+  /** e.g. `https://openrouter.ai/api/v1` — omit for OpenAI’s default host. */
+  baseURL?: string;
+  defaultHeaders?: Record<string, string>;
   model: string;
   templateId: VideoTemplate["id"];
   postText: string;
@@ -42,7 +46,11 @@ export function finalizePlanFromModelJson(
 }
 
 export async function planPost(input: PlanPostInput): Promise<SlidePlan> {
-  const client = new OpenAI({ apiKey: input.openaiApiKey });
+  const client = new OpenAI({
+    apiKey: input.apiKey,
+    baseURL: input.baseURL,
+    defaultHeaders: input.defaultHeaders,
+  });
   const template = getTemplateById(input.templateId);
   const system = buildPlannerSystemPrompt(template);
   const user = buildPlannerUserPrompt(input.postText);
@@ -60,12 +68,12 @@ export async function planPost(input: PlanPostInput): Promise<SlidePlan> {
 
     raw = response.choices[0]?.message?.content ?? "";
     if (!raw) {
-      throw new PlannerError("OpenAI returned an empty response.");
+      throw new PlannerError("The model returned an empty response.");
     }
   } catch (err) {
     if (err instanceof PlannerError) throw err;
     throw new PlannerError(
-      err instanceof Error ? err.message : "OpenAI request failed.",
+      err instanceof Error ? err.message : "LLM request failed.",
     );
   }
 
