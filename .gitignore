@@ -5,6 +5,7 @@ dist
 coverage
 remotion/build
 remotion/tsconfig.tsbuildinfo
+apps/web/tsconfig.tsbuildinfo
 data/*
 !data/.gitkeep
 apps/web/data/
