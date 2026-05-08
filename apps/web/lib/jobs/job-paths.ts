@@ -2,7 +2,7 @@ import path from "node:path";
 import { getMonorepoRoot, getWebAppRoot } from "../repo-paths";
 
 export function getJobDataRoot(): string {
-  return path.join(process.cwd(), "data", "jobs");
+  return path.join(getMonorepoRoot(), "data", "jobs");
 }
 
 export function getJobDir(jobId: string): string {

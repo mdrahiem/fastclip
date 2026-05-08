@@ -3,9 +3,9 @@ import { fileURLToPath } from "node:url";
 
 const LIB_DIR = path.dirname(fileURLToPath(import.meta.url));
 
-/** Monorepo root (parent of `apps/web`). */
+/** Monorepo root (directory containing `pnpm-workspace.yaml`, `apps/`, `remotion/`). */
 export function getMonorepoRoot(): string {
-  return path.resolve(LIB_DIR, "..", "..");
+  return path.resolve(LIB_DIR, "..", "..", "..");
 }
 
 /** `apps/web` absolute path. */

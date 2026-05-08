@@ -16,7 +16,7 @@ Copy [`.env.example`](./.env.example) to **`.env` in the repo root** (next to `p
   - **`OPENROUTER_API_KEY`** — your [OpenRouter](https://openrouter.ai/) key (uses `OPENROUTER_BASE_URL`, default `https://openrouter.ai/api/v1`). Set **`OPENAI_MODEL`** to an OpenRouter model id (e.g. `openai/gpt-4o-mini`).
   - **`OPENAI_API_KEY`** — only if you use OpenAI directly (leave `OPENROUTER_API_KEY` unset). Then **`OPENAI_MODEL`** is an OpenAI model id (e.g. `gpt-4o-mini`).
 - **`SESSION_SECRET`** — at least 32 characters; signs session cookies for job APIs.
-- **`DATABASE_URL`** — SQLite location for the jobs table. Default `file:./data/app.db` is resolved relative to **the current working directory**. When you run `pnpm dev` / `pnpm worker` for `@video-gen/web`, cwd is usually `apps/web`, so the file becomes `apps/web/data/app.db`.
+- **`DATABASE_URL`** — SQLite file for jobs. Default `file:./data/app.db` is resolved against the **repo root** (next to `pnpm-workspace.yaml`), so the web app and worker always use the same file even if `process.cwd()` differs. Job media and outputs live under **`data/jobs/`** on the repo root too.
 
 ## Local development
 
@@ -32,13 +32,15 @@ Apply database migrations (from repo root):
 pnpm --filter @video-gen/web db:migrate
 ```
 
+The SQLite file defaults to **`data/app.db`** at the repo root. If you previously ran an older version that stored the DB under `apps/web/data/`, either copy that file to `data/app.db` or delete it and run `db:migrate` again.
+
 Run the web app (terminal 1):
 
 ```bash
 pnpm dev
 ```
 
-Run the job worker (terminal 2; same env as `.env` in `apps/web`):
+Run the job worker (terminal 2; uses the same repo-root `.env`):
 
 ```bash
 pnpm --filter @video-gen/web worker

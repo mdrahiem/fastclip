@@ -1,15 +1,11 @@
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { getMonorepoRoot } from "../repo-paths";
 
 /**
  * Resolves SQLite `DATABASE_URL` (`file:...` or a filesystem path) to an absolute path.
- * Relative paths are resolved against `process.cwd()`.
- *
- * With `pnpm --filter @video-gen/web <script>`, cwd is typically `apps/web`, so
- * `file:./data/app.db` becomes `apps/web/data/app.db`. If you run tooling from the
- * monorepo root without changing cwd, use a URL that matches that cwd (for example
- * `file:../../data/app.db` when cwd is `apps/web` and the DB should live in the
- * repo-root `data/` folder).
+ * **Relative** paths are resolved against the **monorepo root** (same as `pnpm-workspace.yaml`)
+ * so the Next.js server and `pnpm worker` always share one DB file regardless of `process.cwd()`.
  */
 export function resolveSqliteDatabaseFilePath(databaseUrl: string): string {
   const trimmed = databaseUrl.trim();
@@ -19,7 +15,7 @@ export function resolveSqliteDatabaseFilePath(databaseUrl: string): string {
   const normalized = path.normalize(withoutScheme);
   return path.isAbsolute(normalized)
     ? normalized
-    : path.resolve(process.cwd(), normalized);
+    : path.resolve(getMonorepoRoot(), normalized);
 }
 
 /** Absolute `file:` URL for drizzle-kit and drivers that expect a URL string. */

@@ -290,8 +290,9 @@ export default function WizardPage() {
               ) : null}
               {status.status === "queued" ? (
                 <p style={{ marginTop: "10px", fontSize: "0.875rem", color: "#64748b" }}>
-                  Waiting for the job worker — run{" "}
-                  <code style={{ fontSize: "0.8rem" }}>pnpm --filter @video-gen/web worker</code>.
+                  The worker hasn&apos;t picked up this job yet. In a second terminal at the repo root, run{" "}
+                  <code style={{ fontSize: "0.8rem" }}>pnpm --filter @video-gen/web worker</code> and
+                  leave it running. Reload if it was already running — you may need a restart after updating env paths.
                 </p>
               ) : null}
               {status.errorMessage ? (
