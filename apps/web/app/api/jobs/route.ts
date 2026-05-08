@@ -123,28 +123,42 @@ export async function POST(req: Request) {
   const builtinTrackId =
     data.musicMode === "builtin" ? (data.builtinTrackId ?? "default") : null;
 
-  getDb()
-    .insert(jobs)
-    .values({
-      id: jobId,
-      sessionId,
-      status: "queued",
-      step: "queued",
-      errorMessage: null,
-      createdAt: now,
-      updatedAt: now,
-      deleteAfter: 0,
-      postText: data.postText,
-      templateId,
-      themeId,
-      aspectRatio: data.aspectRatio,
-      musicMode: data.musicMode,
-      builtinTrackId,
-      uploadStoragePath,
-      slidePlanJson: null,
-      outputVideoPath: null,
-    })
-    .run();
+  try {
+    getDb()
+      .insert(jobs)
+      .values({
+        id: jobId,
+        sessionId,
+        status: "queued",
+        step: "queued",
+        errorMessage: null,
+        createdAt: now,
+        updatedAt: now,
+        deleteAfter: 0,
+        postText: data.postText,
+        templateId,
+        themeId,
+        aspectRatio: data.aspectRatio,
+        musicMode: data.musicMode,
+        builtinTrackId,
+        uploadStoragePath,
+        slidePlanJson: null,
+        outputVideoPath: null,
+      })
+      .run();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/no such table:\s*jobs/i.test(msg)) {
+      return NextResponse.json(
+        {
+          error:
+            "Database is empty. From the repo root run: pnpm --filter @video-gen/web db:migrate",
+        },
+        { status: 503 },
+      );
+    }
+    throw err;
+  }
 
   const res = NextResponse.json({ jobId });
   res.cookies.set(

@@ -26,15 +26,7 @@ Install dependencies:
 pnpm install
 ```
 
-Apply database migrations (from repo root):
-
-```bash
-pnpm --filter @video-gen/web db:migrate
-```
-
-The SQLite file defaults to **`data/app.db`** at the repo root. If you previously ran an older version that stored the DB under `apps/web/data/`, either copy that file to `data/app.db` or delete it and run `db:migrate` again.
-
-Run the web app (terminal 1):
+Run the web app (terminal 1). **`pnpm dev` runs `db:migrate` first**, so the `jobs` table exists before you hit the API.
 
 ```bash
 pnpm dev
@@ -47,6 +39,14 @@ pnpm --filter @video-gen/web worker
 ```
 
 The worker polls SQLite for queued jobs and should stay running while you exercise the UI.
+
+**Migrations only (e.g. production `next start`, or if you skip `pnpm dev`):**
+
+```bash
+pnpm --filter @video-gen/web db:migrate
+```
+
+The SQLite file defaults to **`data/app.db`** at the repo root. If you previously used **`apps/web/data/`**, copy `app.db` to **`data/app.db`** at the repo root (or delete and migrate fresh).
 
 ## Docker
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+pnpm --filter @video-gen/web db:migrate
 pnpm --filter @video-gen/web worker &
 worker_pid=$!
 
