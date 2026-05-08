@@ -10,7 +10,7 @@ Monorepo for turning LinkedIn-style posts into short Remotion-rendered videos: a
 
 ## Configuration
 
-Copy `.env.example` to **`apps/web/.env`** (or export the same variables before running scripts so `apps/web` sees them). Set at least:
+Copy [`.env.example`](./.env.example) to **`.env` in the repo root** (next to `pnpm-workspace.yaml`). Next.js and the job worker both load that file, so you don’t need a separate `apps/web/.env` unless you want overrides in `apps/web/.env.local`.
 
 - **LLM** — one of:
   - **`OPENROUTER_API_KEY`** — your [OpenRouter](https://openrouter.ai/) key (uses `OPENROUTER_BASE_URL`, default `https://openrouter.ai/api/v1`). Set **`OPENAI_MODEL`** to an OpenRouter model id (e.g. `openai/gpt-4o-mini`).

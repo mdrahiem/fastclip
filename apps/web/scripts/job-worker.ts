@@ -1,3 +1,4 @@
+import "../lib/load-monorepo-env";
 import { startJobWorker } from "../lib/jobs/worker";
 
 const controller = new AbortController();
