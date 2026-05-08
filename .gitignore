@@ -3,6 +3,8 @@ node_modules
 .turbo
 dist
 coverage
+remotion/build
+remotion/tsconfig.tsbuildinfo
 data/*
 !data/.gitkeep
 .env

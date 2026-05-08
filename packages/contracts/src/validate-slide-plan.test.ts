@@ -3,7 +3,7 @@ import {
   parseSlidePlanJson,
   SlidePlanValidationError,
   assertSlideCount,
-} from "./validate-slide-plan.js";
+} from "./validate-slide-plan";
 
 const validMinimal = `{
   "slidePlanVersion": 1,

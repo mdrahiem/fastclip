@@ -3,7 +3,7 @@ import {
   DEFAULT_VIDEO_TEMPLATE_ID,
   getTemplateById,
   VIDEO_TEMPLATES,
-} from "./templates.js";
+} from "./templates";
 
 describe("templates", () => {
   it("has a default template", () => {

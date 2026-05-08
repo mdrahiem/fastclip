@@ -1,4 +1,4 @@
-import { SlidePlanSchema, type SlidePlan } from "./slide-plan.js";
+import { SlidePlanSchema, type SlidePlan } from "./slide-plan";
 
 export class SlidePlanValidationError extends Error {
   constructor(message: string) {
