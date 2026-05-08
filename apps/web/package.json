@@ -7,13 +7,17 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
     "@remotion/bundler": "^4.0.331",
     "@remotion/renderer": "^4.0.331",
     "@video-gen/contracts": "workspace:*",
     "@video-gen/planner": "workspace:*",
+    "better-sqlite3": "^12.9.0",
+    "drizzle-orm": "^0.45.2",
     "next": "^15",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -21,9 +25,11 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "drizzle-kit": "^0.31.10",
     "typescript": "^5.7.3"
   }
 }

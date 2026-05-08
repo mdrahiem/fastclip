@@ -7,5 +7,6 @@ remotion/build
 remotion/tsconfig.tsbuildinfo
 data/*
 !data/.gitkeep
+apps/web/data/
 .env
 .DS_Store
