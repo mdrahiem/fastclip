@@ -77,18 +77,31 @@ export async function planPost(input: PlanPostInput): Promise<SlidePlan> {
 
   try {
     let raw = await runCompletion(messages);
-    try {
-      return finalizePlanFromModelJson(raw, input.templateId);
-    } catch {
-      messages.push({ role: "assistant", content: raw });
-      messages.push({
-        role: "user",
-        content:
-          "That output failed validation. Reply with ONLY one JSON object (no markdown, no prose). Rules: slidePlanVersion is the number 1; each slide.index is a number in order starting at 0; each layer has type \"text\" or \"shape\"; text.role is hook, body, cta, or label; text.region and shape.region are top, center, or bottom; shape.shape is circle, rect, or line.",
-      });
-      raw = await runCompletion(messages);
-      return finalizePlanFromModelJson(raw, input.templateId);
+    let lastErr: unknown;
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        return finalizePlanFromModelJson(raw, input.templateId);
+      } catch (err) {
+        lastErr = err;
+        if (attempt === 2) break;
+        const hint =
+          err instanceof Error ? err.message : "Validation failed.";
+        messages.push({ role: "assistant", content: raw });
+        messages.push({
+          role: "user",
+          content:
+            attempt === 0
+              ? `That output failed validation (${hint}). Reply with ONLY one JSON object (no markdown, no prose). Rules: slidePlanVersion is the number 1; exactly ${template.slideCount} slides; slide indices are numbers 0..${template.slideCount - 1} in order; each slide has at least one text layer; layer type is lowercase "text" or "shape"; text.role is hook, body, cta, or label; text.region and shape.region are top, center, or bottom; shape.shape is circle, rect, or line.`
+              : `Still invalid (${hint}). Output ONLY compact JSON starting with { and ending with }. Example shape: {"slidePlanVersion":1,"slides":[{"index":0,"layers":[{"type":"text","role":"hook","text":"...","region":"center"}]},{"index":1,"layers":[{"type":"text","role":"body","text":"...","region":"center"}]},{"index":2,"layers":[{"type":"text","role":"cta","text":"...","region":"bottom"}]}]}`,
+        });
+        raw = await runCompletion(messages);
+      }
     }
+
+    if (lastErr instanceof PlannerError) throw lastErr;
+    if (lastErr instanceof Error) throw new PlannerError(lastErr.message);
+    throw new PlannerError("Slide plan validation failed after retries.");
   } catch (err) {
     if (err instanceof PlannerError) throw err;
     throw new PlannerError(

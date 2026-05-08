@@ -21,8 +21,14 @@ function readFileAsBase64(blob: Blob): Promise<string> {
   });
 }
 
+function normalizePostInput(raw: string): string {
+  return raw.replace(/\u00a0/g, " ").trim();
+}
+
 export default function WizardPage() {
-  const [postText, setPostText] = useState("");
+  /** Uncontrolled: avoids React controlled `<textarea>` fighting paste / IME / extensions. */
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const feedbackRef = useRef<HTMLDivElement | null>(null);
   const [aspectRatio, setAspectRatio] = useState<"9:16" | "16:9">("9:16");
   const [musicMode, setMusicMode] = useState<"builtin" | "upload">("builtin");
   const [file, setFile] = useState<File | null>(null);
@@ -31,6 +37,16 @@ export default function WizardPage() {
   const [jobId, setJobId] = useState<string | null>(null);
   const [status, setStatus] = useState<StatusBody | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+
+  useEffect(() => {
+    setSubmitting(false);
+  }, []);
+
+  const scrollFeedbackIntoView = useCallback(() => {
+    requestAnimationFrame(() => {
+      feedbackRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+  }, []);
 
   const poll = useCallback((id: string) => {
     const tick = async () => {
@@ -63,6 +79,18 @@ export default function WizardPage() {
   );
 
   async function onGenerate() {
+    const text = normalizePostInput(textareaRef.current?.value ?? "");
+    if (!text) {
+      setError("Add some post text first.");
+      scrollFeedbackIntoView();
+      return;
+    }
+    if (musicMode === "upload" && !file) {
+      setError("Choose an audio file for upload.");
+      scrollFeedbackIntoView();
+      return;
+    }
+
     setError(null);
     setSubmitting(true);
     setJobId(null);
@@ -71,16 +99,14 @@ export default function WizardPage() {
     try {
       let base64Music: string | undefined;
       if (musicMode === "upload") {
-        if (!file) {
-          setError("Choose an audio file for upload.");
-          setSubmitting(false);
-          return;
+        const uploadFile = file;
+        if (uploadFile) {
+          base64Music = await readFileAsBase64(uploadFile);
         }
-        base64Music = await readFileAsBase64(file);
       }
 
       const payload = {
-        postText,
+        postText: text,
         aspectRatio,
         musicMode,
         builtinTrackId: musicMode === "builtin" ? "default" : undefined,
@@ -95,22 +121,30 @@ export default function WizardPage() {
         credentials: "include",
         body: JSON.stringify(payload),
       });
-      const raw = await res.json().catch(() => ({}));
+      const raw = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        details?: unknown;
+        jobId?: string;
+      };
       if (!res.ok) {
-        setError(raw?.error ?? "Could not queue job.");
-        setSubmitting(false);
+        const detail =
+          raw.details != null ? ` ${JSON.stringify(raw.details)}` : "";
+        setError((raw.error ?? "Could not queue job.") + detail);
+        scrollFeedbackIntoView();
         return;
       }
-      const id = raw.jobId as string | undefined;
+      const id = raw.jobId;
       if (!id) {
         setError("No job id returned.");
-        setSubmitting(false);
+        scrollFeedbackIntoView();
         return;
       }
       setJobId(id);
       poll(id);
-    } catch {
-      setError("Network error.");
+      scrollFeedbackIntoView();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+      scrollFeedbackIntoView();
     } finally {
       setSubmitting(false);
     }
@@ -142,10 +176,12 @@ export default function WizardPage() {
         Post text
       </label>
       <textarea
-        value={postText}
+        ref={textareaRef}
         name="postText"
         aria-label="Post text"
-        onChange={(e) => setPostText(e.target.value)}
+        autoComplete="off"
+        spellCheck={true}
+        defaultValue=""
         placeholder="Paste your LinkedIn post…"
         rows={9}
         style={{
@@ -231,7 +267,7 @@ export default function WizardPage() {
       <button
         type="button"
         onClick={() => void onGenerate()}
-        disabled={submitting || !postText.trim()}
+        disabled={submitting}
         style={{
           width: "100%",
           padding: "14px 18px",
@@ -239,10 +275,10 @@ export default function WizardPage() {
           border: "none",
           fontWeight: 600,
           fontSize: "1rem",
-          cursor:
-            submitting || !postText.trim() ? "not-allowed" : "pointer",
-          background:
-            submitting || !postText.trim() ? "#cbd5f5" : "linear-gradient(135deg,#6366f1,#7c3aed)",
+          cursor: submitting ? "not-allowed" : "pointer",
+          background: submitting
+            ? "#cbd5f5"
+            : "linear-gradient(135deg,#6366f1,#7c3aed)",
           color: "#fafafa",
           marginBottom: "20px",
         }}
@@ -250,13 +286,22 @@ export default function WizardPage() {
         {submitting ? "Queued…" : "Generate"}
       </button>
 
-      {error ? (
-        <p style={{ color: "#b91c1c", fontSize: "0.9rem", marginBottom: "12px" }}>
-          {error}
-        </p>
-      ) : null}
+      <div ref={feedbackRef}>
+        {error ? (
+          <p
+            role="alert"
+            style={{
+              color: "#b91c1c",
+              fontSize: "0.9rem",
+              marginTop: 0,
+              marginBottom: "12px",
+            }}
+          >
+            {error}
+          </p>
+        ) : null}
 
-      {jobId ? (
+        {jobId ? (
         <section
           style={{
             padding: "16px 18px",
@@ -296,7 +341,16 @@ export default function WizardPage() {
                 </p>
               ) : null}
               {status.errorMessage ? (
-                <p style={{ color: "#b45309", marginTop: "8px" }}>
+                <p
+                  title={status.errorMessage}
+                  style={{
+                    color: "#b45309",
+                    marginTop: "8px",
+                    whiteSpace: "pre-wrap",
+                    overflowWrap: "anywhere",
+                    wordBreak: "break-word",
+                  }}
+                >
                   {status.errorMessage}
                 </p>
               ) : null}
@@ -322,7 +376,8 @@ export default function WizardPage() {
             </a>
           ) : null}
         </section>
-      ) : null}
+        ) : null}
+      </div>
     </main>
   );
 }

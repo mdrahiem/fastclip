@@ -1,5 +1,4 @@
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { bundle } from "@remotion/bundler";
 import type { FfmpegOverrideFn } from "@remotion/renderer";
 import { renderMedia, selectComposition } from "@remotion/renderer";
@@ -9,14 +8,11 @@ import type {
   ThemePack,
 } from "@video-gen/contracts";
 
-const REMOTION_HELPER_DIR = path.dirname(fileURLToPath(import.meta.url));
+import { getMonorepoRoot } from "../repo-paths";
 
-/** Repo root-relative path to Remotion CLI entry (`remotion/src/index.ts`). */
-export const DEFAULT_REMOTION_ENTRY = path.resolve(
-  REMOTION_HELPER_DIR,
-  "..",
-  "..",
-  "..",
+/** Remotion bundle entry at repo root: `remotion/src/index.ts`. */
+export const DEFAULT_REMOTION_ENTRY = path.join(
+  getMonorepoRoot(),
   "remotion",
   "src",
   "index.ts",

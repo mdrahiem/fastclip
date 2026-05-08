@@ -2,7 +2,6 @@ import { existsSync } from "node:fs";
 import { copyFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { eq } from "drizzle-orm";
-import ffmpeg from "fluent-ffmpeg";
 import type { AspectRatioId, SlidePlan, ThemePack, VideoTemplate } from "@video-gen/contracts";
 import { getTemplateById, getThemeById } from "@video-gen/contracts";
 import { planPost } from "@video-gen/planner";
@@ -10,6 +9,7 @@ import { PlannerError } from "@video-gen/planner";
 
 import "../audio/normalize";
 import { normalizeMusicToAac } from "../audio/normalize";
+import { probeAudioDurationSec } from "../audio/probe-duration";
 import { getDb } from "../db";
 import { jobs } from "../db/schema";
 import { getEnv, getLlmConfig } from "../env";
@@ -24,28 +24,22 @@ import {
   getRemotionPublicAudioPath,
 } from "./job-paths";
 
-async function probeDurationSec(inputPath: string): Promise<number> {
-  return new Promise((resolve, reject) => {
-    ffmpeg.ffprobe(inputPath, (err, data) => {
-      if (err) reject(err);
-      else resolve(data.format.duration ?? 0);
-    });
-  });
-}
-
 function toUserFacingJobError(err: unknown): string {
   if (err instanceof PlannerError) return err.message;
+  const text = String(err);
+  /** Audio pipeline uses bundled ffmpeg from npm; messages often mention ffmpeg on failure. */
+  if (/ffmpeg|ffprobe/i.test(text)) {
+    return "Audio processing failed (ffmpeg). Ensure dependencies installed and restart the worker.";
+  }
   if (err instanceof Error) {
     const raw = err.message;
     if (raw.includes("Built-in music") || raw.includes("Built-in track")) return raw;
     if (/ENOENT|no such file/i.test(raw)) {
-      return "A required file was missing. Try the default track or upload again.";
+      const hint = raw.slice(0, 280);
+      return `Missing file or binary (${hint}). If this mentions ffmpeg, reinstall deps and restart the worker; otherwise check built-in audio path or upload.`;
     }
     if (raw.includes("exceeds max duration")) return raw;
     if (raw.includes("Upload")) return raw;
-  }
-  if (/ffmpeg|ffprobe/i.test(String(err))) {
-    return "Audio processing failed. Try a different file or the built-in track.";
   }
   return "We couldn’t finish your video. Please try again.";
 }
@@ -106,7 +100,7 @@ export async function processJob(jobId: string): Promise<void> {
 
     updateJob(jobId, { step: "normalizing_audio" });
 
-    const duration = await probeDurationSec(finalInputPath);
+    const duration = await probeAudioDurationSec(finalInputPath);
     if (duration > env.MAX_MUSIC_DURATION_SEC) {
       throw new Error(
         `Music exceeds max duration (${env.MAX_MUSIC_DURATION_SEC}s).`,

@@ -6,7 +6,7 @@ Monorepo for turning LinkedIn-style posts into short Remotion-rendered videos: a
 
 - **Node.js** 22+
 - **pnpm** 9 (repo pins `packageManager` in the root `package.json`; enable via Corepack: `corepack enable`)
-- **FFmpeg** and **ffprobe** on your PATH for local renders (the worker shells out to FFmpeg; macOS often uses Homebrew: `brew install ffmpeg`)
+- **FFmpeg** — the worker uses **`@ffmpeg-installer/ffmpeg`** (bundled binary via npm). You do **not** need Homebrew `ffmpeg`/`ffprobe` on `PATH` for music normalization or duration probing. Remotion rendering still relies on its own Chromium bundle and ffmpeg hooks as configured in code.
 
 ## Configuration
 
