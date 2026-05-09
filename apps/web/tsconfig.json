@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@video-gen/contracts": ["../../packages/contracts/src"],
+      "@video-gen/hyperframes-render": ["../../packages/hyperframes-render/src"]
+    }
+  },
+  "include": ["app", "server", "lib"],
+  "exclude": ["node_modules", "dist"]
+}
