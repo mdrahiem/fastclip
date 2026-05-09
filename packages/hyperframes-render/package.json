@@ -15,7 +15,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "puppeteer": "^24.43.0"
+    "hyperframes": "^0.5.5"
   },
   "devDependencies": {
     "typescript": "^5.3.3"

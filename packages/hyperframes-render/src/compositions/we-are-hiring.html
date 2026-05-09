@@ -1,0 +1,483 @@
+<!doctype html>
+<html
+  data-composition-variables='[
+    {"id":"title1","type":"string","label":"Job Title 1","default":"Software Engineer"},
+    {"id":"title2","type":"string","label":"Job Title 2","default":"Product Manager"},
+    {"id":"title3","type":"string","label":"Job Title 3","default":"UX Designer"},
+    {"id":"title4","type":"string","label":"Job Title 4","default":"Data Scientist"},
+    {"id":"aspectRatio","type":"enum","label":"Aspect Ratio","default":"16:9","options":[
+      {"value":"16:9","label":"Landscape (16:9)"},
+      {"value":"9:16","label":"Portrait (9:16)"}
+    ]}
+  ]'
+>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: #000814;
+        font-family: "Barlow Condensed", "Barlow", sans-serif;
+        overflow: hidden;
+      }
+
+      /* ── Root composition ── */
+      [data-composition-id="root"] {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background: #000814;
+        overflow: hidden;
+      }
+
+      /* ── Background decoratives ── */
+      .bg-glow-1 {
+        position: absolute;
+        width: 60%;
+        height: 60%;
+        top: -10%;
+        right: -10%;
+        border-radius: 50%;
+        background: radial-gradient(
+          ellipse at center,
+          rgba(252, 163, 17, 0.12) 0%,
+          transparent 70%
+        );
+        pointer-events: none;
+      }
+
+      .bg-glow-2 {
+        position: absolute;
+        width: 50%;
+        height: 50%;
+        bottom: -15%;
+        left: -10%;
+        border-radius: 50%;
+        background: radial-gradient(
+          ellipse at center,
+          rgba(46, 196, 182, 0.08) 0%,
+          transparent 70%
+        );
+        pointer-events: none;
+      }
+
+      .bg-grid {
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(252, 163, 17, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(252, 163, 17, 0.04) 1px, transparent 1px);
+        background-size: 80px 80px;
+        pointer-events: none;
+      }
+
+      .bg-stripe {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 4px;
+        background: linear-gradient(
+          180deg,
+          transparent 0%,
+          #fca311 30%,
+          #fca311 70%,
+          transparent 100%
+        );
+        opacity: 0.7;
+      }
+
+      /* Ghost headline — decorative background text */
+      .bg-ghost {
+        position: absolute;
+        bottom: -0.1em;
+        left: -0.02em;
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 900;
+        font-size: clamp(160px, 18vw, 340px);
+        color: rgba(252, 163, 17, 0.04);
+        text-transform: uppercase;
+        letter-spacing: -0.04em;
+        line-height: 1;
+        pointer-events: none;
+        white-space: nowrap;
+        user-select: none;
+      }
+
+      /* ── Corner metadata ── */
+      .meta-tag {
+        position: absolute;
+        top: 48px;
+        right: 56px;
+        font-family: "JetBrains Mono", "DM Mono", monospace;
+        font-size: 13px;
+        font-weight: 400;
+        color: rgba(229, 229, 229, 0.35);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      /* ── Main content ── */
+      .scene-content {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 80px 100px;
+      }
+
+      /* Portrait adjustments */
+      [data-aspect="9:16"] .scene-content {
+        padding: 120px 80px;
+      }
+
+      .eyebrow {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 16px;
+        font-weight: 500;
+        color: #fca311;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        margin-bottom: 28px;
+      }
+
+      .headline {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 900;
+        font-size: clamp(72px, 7vw, 130px);
+        color: #e5e5e5;
+        text-transform: uppercase;
+        letter-spacing: -0.02em;
+        line-height: 0.95;
+        margin-bottom: 48px;
+      }
+
+      .headline span {
+        color: #fca311;
+      }
+
+      /* Divider rule */
+      .rule {
+        height: 2px;
+        background: linear-gradient(90deg, #fca311 0%, rgba(252, 163, 17, 0.15) 100%);
+        margin-bottom: 44px;
+        transform-origin: left center;
+      }
+
+      /* ── Job title slots ── */
+      .title-slot {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 18px;
+      }
+
+      .title-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #fca311;
+        flex-shrink: 0;
+      }
+
+      .title-text {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: clamp(34px, 3.5vw, 58px);
+        color: #e5e5e5;
+        letter-spacing: -0.01em;
+        line-height: 1;
+      }
+
+      /* ── Active title highlight ── */
+      .title-slot.is-active .title-text {
+        color: #ffffff;
+      }
+
+      .title-slot.is-active .title-dot {
+        background: #fca311;
+        box-shadow: 0 0 12px rgba(252, 163, 17, 0.8);
+      }
+
+      /* ── Bottom ticker ── */
+      .ticker {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 48px;
+        background: #fca311;
+        display: flex;
+        align-items: center;
+        padding: 0 56px;
+        gap: 40px;
+        overflow: hidden;
+      }
+
+      .ticker-label {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 13px;
+        font-weight: 600;
+        color: #000814;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .ticker-divider {
+        width: 1px;
+        height: 20px;
+        background: rgba(0, 8, 20, 0.3);
+        flex-shrink: 0;
+      }
+
+      .ticker-scroll {
+        font-family: "Barlow Condensed", sans-serif;
+        font-size: 15px;
+        font-weight: 600;
+        color: #000814;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      class="clip"
+      data-composition-id="root"
+      data-start="0"
+      data-duration="15"
+      data-width="1920"
+      data-height="1080"
+      data-track-index="0"
+    >
+      <!-- Background layer -->
+      <div class="bg-glow-1" id="glow1"></div>
+      <div class="bg-glow-2" id="glow2"></div>
+      <div class="bg-grid" id="grid"></div>
+      <div class="bg-stripe" id="stripe"></div>
+      <div class="bg-ghost" id="ghost">HIRING</div>
+
+      <!-- Corner metadata -->
+      <div class="meta-tag" id="meta">Now Open</div>
+
+      <!-- Main content -->
+      <div class="scene-content">
+        <div class="eyebrow" id="eyebrow">We Are</div>
+        <div class="headline" id="headline">
+          Hiring<br /><span id="headline-accent">Talent</span>
+        </div>
+        <div class="rule" id="rule"></div>
+
+        <div class="title-slot" id="slot1">
+          <div class="title-dot"></div>
+          <div class="title-text" id="t1">—</div>
+        </div>
+        <div class="title-slot" id="slot2">
+          <div class="title-dot"></div>
+          <div class="title-text" id="t2">—</div>
+        </div>
+        <div class="title-slot" id="slot3">
+          <div class="title-dot"></div>
+          <div class="title-text" id="t3">—</div>
+        </div>
+        <div class="title-slot" id="slot4">
+          <div class="title-dot"></div>
+          <div class="title-text" id="t4">—</div>
+        </div>
+      </div>
+
+      <!-- Bottom ticker -->
+      <div class="ticker" id="ticker">
+        <span class="ticker-label">Join Us</span>
+        <div class="ticker-divider"></div>
+        <span class="ticker-scroll" id="ticker-text">—</span>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script>
+      // ── Read variables ──────────────────────────────────────────────
+      const vars = window.__hyperframes
+        ? window.__hyperframes.getVariables()
+        : {
+            title1: "Software Engineer",
+            title2: "Product Manager",
+            title3: "UX Designer",
+            title4: "Data Scientist",
+            aspectRatio: "16:9",
+          };
+
+      const titles = [vars.title1, vars.title2, vars.title3, vars.title4];
+
+      // Populate DOM
+      document.getElementById("t1").textContent = titles[0];
+      document.getElementById("t2").textContent = titles[1];
+      document.getElementById("t3").textContent = titles[2];
+      document.getElementById("t4").textContent = titles[3];
+      document.getElementById("ticker-text").textContent = titles.join(
+        "  ·  "
+      );
+
+      // Adjust dimensions for 9:16
+      if (vars.aspectRatio === "9:16") {
+        const root = document.getElementById("root");
+        root.setAttribute("data-width", "1080");
+        root.setAttribute("data-height", "1920");
+        root.setAttribute("data-aspect", "9:16");
+      }
+
+      // ── Timeline ────────────────────────────────────────────────────
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // ── AMBIENT decoratives (seekable, attached to tl) ──────────────
+      // Glow 1 — slow breathe
+      tl.fromTo(
+        "#glow1",
+        { scale: 0.95, opacity: 0.7 },
+        { scale: 1.08, opacity: 1, duration: 4, ease: "sine.inOut", yoyo: true, repeat: 3 },
+        0
+      );
+      // Glow 2 — offset breathe
+      tl.fromTo(
+        "#glow2",
+        { scale: 1.05, opacity: 0.6 },
+        { scale: 0.92, opacity: 0.9, duration: 5, ease: "sine.inOut", yoyo: true, repeat: 2 },
+        0.8
+      );
+      // Grid slow fade pulse
+      tl.fromTo(
+        "#grid",
+        { opacity: 0.6 },
+        { opacity: 1, duration: 6, ease: "sine.inOut", yoyo: true, repeat: 1 },
+        0
+      );
+      // Ghost text slow drift
+      tl.fromTo(
+        "#ghost",
+        { x: 0 },
+        { x: -40, duration: 15, ease: "none" },
+        0
+      );
+
+      // ── Stripe entrance ──────────────────────────────────────────────
+      tl.fromTo(
+        "#stripe",
+        { scaleY: 0, opacity: 0 },
+        { scaleY: 1, opacity: 0.7, duration: 0.6, ease: "expo.out" },
+        0.1
+      );
+
+      // ── Eyebrow + Headline entrance ──────────────────────────────────
+      tl.fromTo(
+        "#eyebrow",
+        { opacity: 0, x: -30 },
+        { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" },
+        0.3
+      );
+      tl.fromTo(
+        "#headline",
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 0.7, ease: "expo.out" },
+        0.5
+      );
+      tl.fromTo(
+        "#rule",
+        { scaleX: 0, opacity: 0 },
+        { scaleX: 1, opacity: 1, duration: 0.6, ease: "power2.out" },
+        0.9
+      );
+
+      // ── Title slots — staggered entrance ─────────────────────────────
+      // Each slot reveals at: 1.2, 2.0, 2.8, 3.6 → one every 0.8s
+      const slotTimings = [1.2, 2.0, 2.8, 3.6];
+      const slotIds = ["#slot1", "#slot2", "#slot3", "#slot4"];
+      const dotIds = ["#slot1 .title-dot", "#slot2 .title-dot", "#slot3 .title-dot", "#slot4 .title-dot"];
+
+      slotIds.forEach((id, i) => {
+        const t = slotTimings[i];
+        // Dot pops in first
+        tl.fromTo(
+          dotIds[i],
+          { scale: 0, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.25, ease: "back.out(2)" },
+          t
+        );
+        // Title slides in from left
+        tl.fromTo(
+          `${id} .title-text`,
+          { opacity: 0, x: -24 },
+          { opacity: 1, x: 0, duration: 0.45, ease: "power3.out" },
+          t + 0.1
+        );
+      });
+
+      // ── Active title pulse (each title "active" for ~3s window) ──────
+      // Active highlight cycles: title1 active 1.2–4.2, title2 4.2–7.2, etc.
+      const activeDuration = 3;
+      slotIds.forEach((id, i) => {
+        const activeStart = slotTimings[i];
+        const activeEnd = activeStart + activeDuration;
+
+        // Highlight on
+        tl.fromTo(
+          `${id} .title-text`,
+          { color: i === 0 ? "#e5e5e5" : "#e5e5e5" },
+          { color: "#ffffff", duration: 0.3, ease: "power1.out" },
+          activeStart
+        );
+        tl.fromTo(
+          `${id} .title-dot`,
+          { boxShadow: "0 0 0px rgba(252,163,17,0)" },
+          { boxShadow: "0 0 14px rgba(252,163,17,0.9)", duration: 0.3, ease: "power1.out" },
+          activeStart
+        );
+
+        // Highlight off (before next becomes active, unless last)
+        if (i < slotIds.length - 1) {
+          tl.to(`${id} .title-text`, { color: "#888888", duration: 0.25, ease: "power1.in" }, activeEnd - 0.25);
+          tl.to(`${id} .title-dot`, { boxShadow: "0 0 0px rgba(252,163,17,0)", duration: 0.25, ease: "power1.in" }, activeEnd - 0.25);
+          // Hard-kill after dim
+          tl.set(`${id} .title-text`, { color: "#888888" }, activeEnd);
+          tl.set(`${id} .title-dot`, { boxShadow: "0 0 0px rgba(252,163,17,0)" }, activeEnd);
+        }
+      });
+
+      // ── Meta tag ────────────────────────────────────────────────────
+      tl.fromTo(
+        "#meta",
+        { opacity: 0, y: -10 },
+        { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" },
+        0.6
+      );
+
+      // ── Ticker entrance ──────────────────────────────────────────────
+      tl.fromTo(
+        "#ticker",
+        { y: 48, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" },
+        1.0
+      );
+
+      // ── Final fade out (last 0.8s) ───────────────────────────────────
+      tl.to(
+        "#root",
+        { opacity: 0, duration: 0.8, ease: "power2.in" },
+        14.2
+      );
+
+      // Register
+      window.__timelines["root"] = tl;
+    </script>
+  </body>
+</html>
