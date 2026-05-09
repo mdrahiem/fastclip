@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "worker": "node --import tsx/esm ./server/worker.ts",
+    "worker": "node --import tsx/esm --env-file=.env ./server/worker.ts",
     "build": "vite build",
     "start": "node dist/server.js",
     "db:migrate": "prisma migrate dev --skip-generate",
