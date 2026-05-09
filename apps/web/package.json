@@ -34,8 +34,5 @@
     "autoprefixer": "^10.4.17",
     "postcss": "^8.4.33",
     "prisma": "^5.22.0"
-  },
-  "prisma": {
-    "schema": "../../prisma/schema.prisma"
   }
 }

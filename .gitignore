@@ -29,3 +29,5 @@ Thumbs.db
 prisma/data/
 prisma/migrations/
 .env
+apps/web/prisma/migrations/
+apps/web/data/
