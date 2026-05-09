@@ -11,7 +11,7 @@ generator client {
 
 model Job {
   id              String    @id @default(cuid())
-  sessionId       String    @index
+  sessionId       String
   
   // Input
   jobTitles       String    // JSON: ["title1", "title2", "title3", "title4"]

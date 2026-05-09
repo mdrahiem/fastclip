@@ -2,14 +2,14 @@
 
 "use client";
 
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { JobForm } from "@/lib/components/JobForm";
 
-function IndexPage() {
+export default function IndexPage() {
   const navigate = useNavigate();
 
   const handleSuccess = (jobId: string) => {
-    navigate({ to: `/dashboard/$jobId`, params: { jobId } });
+    navigate({ to: `/dashboard/${jobId}` });
   };
 
   return (
@@ -30,7 +30,3 @@ function IndexPage() {
     </div>
   );
 }
-
-export const Route = createFileRoute("/")({
-  component: IndexPage,
-});

@@ -1,8 +1,15 @@
 // apps/web/app/App.tsx
 
-import { RootRoute, Router, RootRouteWithoutChildren } from "@tanstack/react-router";
-import { RouterProvider, Outlet } from "@tanstack/react-router";
+import React from "react";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Outlet,
+} from "@tanstack/react-router";
 import "./index.css";
+import IndexPage from "./routes/index";
+import DashboardPage from "./routes/dashboard/$jobId";
+import EditPage from "./routes/edit/$jobId";
 
 // Root layout component
 function RootLayout() {
@@ -22,22 +29,27 @@ function RootLayout() {
   );
 }
 
-// Create root route
-const rootRoute = new RootRoute({
-  component: RootLayout,
-});
-
-// Import routes dynamically or create them here
-// For now, create a placeholder router
-const router = new Router({
-  routeTree: rootRoute,
-});
-
-declare module "@tanstack/react-router" {
-  interface Register {
-    router: typeof router;
-  }
-}
+// Create router
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <RootLayout />,
+    children: [
+      {
+        index: true,
+        element: <IndexPage />,
+      },
+      {
+        path: "/dashboard/:jobId",
+        element: <DashboardPage />,
+      },
+      {
+        path: "/edit/:jobId",
+        element: <EditPage />,
+      },
+    ],
+  },
+]);
 
 export default function App() {
   return <RouterProvider router={router} />;

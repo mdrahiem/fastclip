@@ -3,14 +3,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createFileRoute, useParams, useNavigate } from "@tanstack/react-router";
+import { useParams, useNavigate } from "@tanstack/react-router";
 import { getJob } from "@/server/rpc/jobs";
 import { EditForm } from "@/lib/components/EditForm";
 
-function EditPage() {
-  const { jobId } = useParams({ from: "/edit/$jobId" });
+export default function EditPage() {
+  const { jobId } = useParams({ from: "/edit/:jobId" });
   const navigate = useNavigate();
-  const [jobDetails, setJobDetails] = useState<Awaited<ReturnType<typeof getJob>> | null>(null);
+  const [
+    jobDetails,
+    setJobDetails,
+  ] = useState<Awaited<ReturnType<typeof getJob>> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -54,11 +57,11 @@ function EditPage() {
   }
 
   const handleSuccess = (newJobId: string) => {
-    navigate({ to: `/dashboard/$jobId`, params: { jobId: newJobId } });
+    navigate({ to: `/dashboard/${newJobId}` });
   };
 
   const handleCancel = () => {
-    navigate({ to: `/dashboard/$jobId`, params: { jobId } });
+    navigate({ to: `/dashboard/${jobId}` });
   };
 
   return (
@@ -84,7 +87,3 @@ function EditPage() {
     </div>
   );
 }
-
-export const Route = createFileRoute("/edit/$jobId")({
-  component: EditPage,
-});
