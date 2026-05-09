@@ -1,0 +1,36 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Job {
+  id              String    @id @default(cuid())
+  sessionId       String    @index
+  
+  // Input
+  jobTitles       String    // JSON: ["title1", "title2", "title3", "title4"]
+  aspectRatio     String    // "9:16" | "16:9"
+  
+  // Status
+  status          String    @default("queued")  // queued | rendering | complete | failed
+  step            String    @default("queued")
+  errorMessage    String?
+  
+  // Output
+  outputVideoPath String?
+  
+  // Metadata
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deleteAfter     BigInt    @default(0)
+  
+  @@index([sessionId])
+  @@index([status])
+  @@index([createdAt])
+}

@@ -1,0 +1,18 @@
+{
+  "name": "video-gen-v2",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev": "pnpm --filter @video-gen/web dev",
+    "worker": "pnpm --filter @video-gen/web worker",
+    "build": "pnpm --filter @video-gen/web build",
+    "start": "pnpm --filter @video-gen/web start",
+    "db:migrate": "pnpm --filter @video-gen/web db:migrate",
+    "db:studio": "pnpm --filter @video-gen/web db:studio",
+    "db:generate": "pnpm --filter @video-gen/web db:generate"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
