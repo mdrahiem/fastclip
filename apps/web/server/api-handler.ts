@@ -167,6 +167,105 @@ export async function handleApiRequest(
       }), true;
     }
 
+    // POST /api/jobs/:jobId/studio — spin up a HyperFrames preview for the job
+    const studioMatch = pathname.match(/^\/api\/jobs\/([^/]+)\/studio$/);
+    if (studioMatch && req.method === "POST") {
+      const { readFileSync, writeFileSync, mkdirSync } = await import("fs");
+      const { resolve, dirname } = await import("path");
+      const { spawn } = await import("child_process");
+      const { fileURLToPath } = await import("url");
+
+      const jobId = studioMatch[1];
+      const job = await db.job.findFirst({ where: { id: jobId, sessionId } });
+      if (!job) return json(res, 404, { error: "Job not found" }), true;
+
+      const titles: string[] = JSON.parse(job.jobTitles);
+      const aspectRatio = job.aspectRatio as "9:16" | "16:9";
+
+      // Build the studio project directory for this job
+      const studioDir = resolve(process.cwd(), "data", "jobs", jobId, "studio");
+      mkdirSync(studioDir, { recursive: true });
+
+      // Load the composition — resolve relative to this file
+      // apps/web/server/ → ../../../packages/hyperframes-render/src/compositions/
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname_here = dirname(__filename);
+      const compositionSrc = resolve(
+        __dirname_here,
+        "../../../packages/hyperframes-render/src/compositions/we-are-hiring.html"
+      );
+      let htmlContent = readFileSync(compositionSrc, "utf-8");
+
+      // Patch data-composition-variables defaults with job's current titles
+      htmlContent = htmlContent.replace(
+        /data-composition-variables='(\[.*?\])'/s,
+        (_match, json_str) => {
+          try {
+            const vars = JSON.parse(json_str);
+            const updates: Record<string, string> = {
+              title1: titles[0] ?? "",
+              title2: titles[1] ?? "",
+              title3: titles[2] ?? "",
+              title4: titles[3] ?? "",
+              aspectRatio,
+            };
+            for (const v of vars) {
+              if (updates[v.id] !== undefined) v.default = updates[v.id];
+            }
+            return `data-composition-variables='${JSON.stringify(vars)}'`;
+          } catch {
+            return _match;
+          }
+        }
+      );
+
+      // Patch HTML dimensions for portrait so the studio viewport is correct
+      if (aspectRatio === "9:16") {
+        htmlContent = htmlContent
+          .replace('data-width="1920"', 'data-width="1080"')
+          .replace('data-height="1080"', 'data-height="1920"')
+          .replace(
+            'background:#000814;width:1920px;height:1080px;position:relative;overflow:hidden;',
+            'background:#000814;width:1080px;height:1920px;position:relative;overflow:hidden;'
+          )
+          .replace(
+            'width: 1920px;\n        height: 1080px;\n        overflow: hidden;\n        background: #000814;\n      }\n\n      /* \u2500\u2500 Root \u2500\u2500 */\n      [data-composition-id="root"] {\n        position: relative;\n        width: 1920px;\n        height: 1080px;',
+            'width: 1080px;\n        height: 1920px;\n        overflow: hidden;\n        background: #000814;\n      }\n\n      /* \u2500\u2500 Root \u2500\u2500 */\n      [data-composition-id="root"] {\n        position: relative;\n        width: 1080px;\n        height: 1920px;'
+          );
+      }
+
+      writeFileSync(resolve(studioDir, "index.html"), htmlContent, "utf-8");
+      writeFileSync(
+        resolve(studioDir, "meta.json"),
+        JSON.stringify({ name: "we-are-hiring", id: jobId }),
+        "utf-8"
+      );
+
+      // Find hyperframes binary
+      const hfCandidates = [
+        resolve(process.cwd(), "node_modules/.bin/hyperframes"),
+        resolve(process.cwd(), "node_modules/.pnpm/node_modules/.bin/hyperframes"),
+        "hyperframes",
+      ];
+      const { existsSync } = await import("fs");
+      const hfBin = hfCandidates.find(existsSync) ?? "hyperframes";
+
+      const port = 3002;
+      const studioUrl = `http://localhost:${port}`;
+
+      // Spawn a detached preview server (fire-and-forget)
+      const child = spawn(hfBin, ["preview", studioDir, `--port`, String(port), "--force-new"], {
+        detached: true,
+        stdio: "ignore",
+      });
+      child.unref();
+
+      // Give the server a moment to bind before the browser hits it
+      await new Promise((r) => setTimeout(r, 1500));
+
+      return json(res, 200, { studioUrl }), true;
+    }
+
     // GET /api/jobs/:jobId/download — video stream (supports Range for <video> seeking)
     const downloadMatch = pathname.match(/^\/api\/jobs\/([^/]+)\/download$/);
     if (downloadMatch && req.method === "GET") {

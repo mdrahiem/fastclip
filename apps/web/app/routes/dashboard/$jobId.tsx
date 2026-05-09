@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "@tanstack/react-router";
 import { useJobPolling } from "@/lib/hooks/useJobPolling";
-import { getJob } from "@/app/lib/api";
+import { getJob, openStudio } from "@/app/lib/api";
 import type { JobDetail, JobStatusResponse } from "@/app/lib/api";
 import { JobStatus } from "@/lib/components/JobStatus";
 import { VideoPlayer } from "@/lib/components/VideoPlayer";
@@ -15,6 +15,22 @@ export default function DashboardPage() {
   const [jobDetails, setJobDetails] = useState<JobDetail | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [isOpeningStudio, setIsOpeningStudio] = useState(false);
+  const [studioError, setStudioError] = useState<string | null>(null);
+
+  const handleOpenStudio = async () => {
+    try {
+      setIsOpeningStudio(true);
+      setStudioError(null);
+      const { studioUrl } = await openStudio(jobId);
+      window.open(studioUrl, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      setStudioError(err instanceof Error ? err.message : "Failed to open studio");
+    } finally {
+      setIsOpeningStudio(false);
+    }
+  };
 
   // Load full job details once (and again when polling marks complete)
   const loadDetails = async () => {
@@ -107,11 +123,15 @@ export default function DashboardPage() {
           <VideoPlayer videoPath={jobDetails?.outputVideoPath ?? ""} jobId={jobId} />
 
           <button
-            onClick={() => navigate({ to: `/edit/${jobId}` })}
-            className="w-full px-6 py-3 border-2 border-blue-600 text-blue-600 font-semibold rounded-lg hover:bg-blue-600 hover:text-white transition-colors"
+            onClick={handleOpenStudio}
+            disabled={isOpeningStudio}
+            className="w-full px-6 py-3 border-2 border-blue-600 text-blue-600 font-semibold rounded-lg hover:bg-blue-600 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            ✏️ Edit &amp; Re-render
+            {isOpeningStudio ? "Opening Studio…" : "✏️ Edit in HyperFrames Studio"}
           </button>
+          {studioError && (
+            <p className="text-sm text-red-600 text-center">{studioError}</p>
+          )}
         </div>
       )}
 
@@ -125,10 +145,11 @@ export default function DashboardPage() {
             </p>
           )}
           <button
-            onClick={() => navigate({ to: `/edit/${jobId}` })}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
+            onClick={handleOpenStudio}
+            disabled={isOpeningStudio}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm disabled:opacity-50"
           >
-            Try Again with Different Titles
+            {isOpeningStudio ? "Opening Studio…" : "Edit in HyperFrames Studio"}
           </button>
         </div>
       )}

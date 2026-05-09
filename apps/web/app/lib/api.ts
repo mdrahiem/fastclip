@@ -63,3 +63,7 @@ export function updateJob(
     body: JSON.stringify(payload),
   });
 }
+
+export function openStudio(jobId: string): Promise<{ studioUrl: string }> {
+  return apiFetch(`/api/jobs/${jobId}/studio`, { method: "POST" });
+}
