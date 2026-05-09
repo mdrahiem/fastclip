@@ -26,3 +26,6 @@ data/jobs/
 # OS
 .DS_Store
 Thumbs.db
+prisma/data/
+prisma/migrations/
+.env
