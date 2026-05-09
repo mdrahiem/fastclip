@@ -2,17 +2,16 @@
 
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
+import { fileURLToPath, URL } from "node:url";
 
 export default defineConfig({
-  plugins: [
-    TanStackRouterVite({
-      routesDirectory: "./app/routes",
-      generatedRouteTree: "./app/routeTree.gen.ts",
-    }),
-    react(),
-  ],
+  plugins: [react()],
   server: {
     middlewareMode: false,
+  },
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./app", import.meta.url)),
+    },
   },
 });
