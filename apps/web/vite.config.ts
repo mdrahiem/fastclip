@@ -12,8 +12,9 @@ function apiMiddlewarePlugin(): Plugin {
       server.middlewares.use(async (req, res, next) => {
         if (!req.url?.startsWith("/api/")) return next();
         try {
-          // Dynamically import to avoid bundling server deps
-          const { handleApiRequest } = await import("./server/api-handler.js");
+          const { handleApiRequest } = await server.ssrLoadModule(
+            "/server/api-handler.ts"
+          );
           const handled = await handleApiRequest(req, res);
           if (!handled) next();
         } catch (err) {
@@ -30,6 +31,11 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL(".", import.meta.url)),
+      "@video-gen/contracts": fileURLToPath(new URL("../../packages/contracts/src/index.ts", import.meta.url)),
     },
+  },
+  // Prevent server-only modules from being bundled for the client
+  optimizeDeps: {
+    exclude: ["@prisma/client", "prisma"],
   },
 });
