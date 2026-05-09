@@ -1,33 +1,39 @@
 // apps/web/server/session.ts
 
 import { SignJWT, jwtVerify } from "jose";
+import { getEnv } from "./env";
 
-export const SESSION_COOKIE_NAME = "sessionId";
+export const SESSION_COOKIE_NAME = "session";
 
-async function getSecretKey(secret: string): Promise<Uint8Array> {
-  const encoder = new TextEncoder();
-  return encoder.encode(secret);
+function getSecretKey(): Uint8Array {
+  return new TextEncoder().encode(getEnv().SESSION_SECRET);
 }
 
-export async function generateSessionId(secret: string): Promise<string> {
-  const jwt = await new SignJWT({ sessionId: crypto.randomUUID() })
+async function makeToken(sessionId: string): Promise<string> {
+  return new SignJWT({ sessionId })
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("30d")
-    .sign(await getSecretKey(secret));
-
-  return jwt;
+    .sign(getSecretKey());
 }
 
-export async function verifySessionCookie(
-  token: string | undefined,
-  secret: string
-): Promise<string | null> {
-  if (!token) return null;
-
+async function verifyToken(token: string): Promise<string | null> {
   try {
-    const verified = await jwtVerify(token, await getSecretKey(secret));
-    return verified.payload.sessionId as string;
+    const { payload } = await jwtVerify(token, getSecretKey());
+    return payload.sessionId as string;
   } catch {
     return null;
   }
+}
+
+/** Returns { sessionId, token } — creates a new session if cookie is missing/invalid. */
+export async function getOrCreateSession(
+  cookieValue: string | undefined
+): Promise<{ sessionId: string; token: string }> {
+  if (cookieValue) {
+    const id = await verifyToken(cookieValue);
+    if (id) return { sessionId: id, token: cookieValue };
+  }
+  const sessionId = crypto.randomUUID();
+  const token = await makeToken(sessionId);
+  return { sessionId, token };
 }

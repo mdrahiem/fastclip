@@ -1,9 +1,9 @@
 // apps/web/lib/hooks/useJobPolling.ts
 
 import { useEffect, useRef, useState } from "react";
-import { getJobStatus } from "@/server/rpc/jobs";
+import { getJobStatus } from "@/app/lib/api";
 import { POLLING_INTERVAL_MS } from "@/lib/constants";
-import type { JobStatusResponse } from "@video-gen/contracts";
+import type { JobStatusResponse } from "@/app/lib/api";
 
 export function useJobPolling(jobId: string) {
   const [status, setStatus] = useState<JobStatusResponse | null>(null);

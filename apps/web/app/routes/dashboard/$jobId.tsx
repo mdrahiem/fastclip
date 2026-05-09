@@ -5,7 +5,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "@tanstack/react-router";
 import { useJobPolling } from "@/lib/hooks/useJobPolling";
-import { getJob } from "@/server/rpc/jobs";
+import { getJob } from "@/app/lib/api";
 import { JobStatus } from "@/lib/components/JobStatus";
 import { VideoPlayer } from "@/lib/components/VideoPlayer";
 

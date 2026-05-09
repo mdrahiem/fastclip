@@ -21,7 +21,9 @@ export const ASPECT_RATIOS = {
 
 export const POLLING_INTERVAL_MS = 500;
 
-export const SESSION_COOKIE_NAME = "sessionId";
+export const JOB_RETENTION_MS = 60 * 60 * 1000; // 1 hour
+
+export const SESSION_COOKIE_NAME = "session";
 
 export const VIDEO_DURATION_SEC = 15;
 

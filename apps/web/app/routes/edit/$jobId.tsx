@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "@tanstack/react-router";
-import { getJob } from "@/server/rpc/jobs";
+import { getJob } from "@/app/lib/api";
 import { EditForm } from "@/lib/components/EditForm";
 
 export default function EditPage() {

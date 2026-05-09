@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createJobSchema } from "@video-gen/contracts";
-import { createJob } from "@/server/rpc/jobs";
+import { createJob } from "@/app/lib/api";
 import { ASPECT_RATIOS } from "@/lib/constants";
 import type { CreateJobInput } from "@video-gen/contracts";
 
