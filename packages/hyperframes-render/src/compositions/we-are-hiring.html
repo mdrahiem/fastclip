@@ -14,242 +14,268 @@
   <head>
     <meta charset="utf-8" />
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
 
-      body {
-        background: #000814;
-        font-family: "Barlow Condensed", "Barlow", sans-serif;
+      html, body {
+        width: 1920px;
+        height: 1080px;
         overflow: hidden;
+        background: #000814;
       }
 
-      /* ── Root composition ── */
+      /* ── Root ── */
       [data-composition-id="root"] {
         position: relative;
-        width: 100%;
-        height: 100%;
+        width: 1920px;
+        height: 1080px;
         background: #000814;
         overflow: hidden;
+        font-family: "Barlow Condensed", "Barlow", sans-serif;
       }
 
       /* ── Background decoratives ── */
-      .bg-glow-1 {
+      .bg-glow-top {
         position: absolute;
-        width: 60%;
-        height: 60%;
-        top: -10%;
-        right: -10%;
+        width: 700px;
+        height: 700px;
+        top: -200px;
+        right: -100px;
         border-radius: 50%;
-        background: radial-gradient(
-          ellipse at center,
-          rgba(252, 163, 17, 0.12) 0%,
-          transparent 70%
-        );
+        background: radial-gradient(ellipse at center, rgba(252,163,17,0.18) 0%, rgba(0,8,20,0) 70%);
         pointer-events: none;
       }
-
-      .bg-glow-2 {
+      .bg-glow-bottom {
         position: absolute;
-        width: 50%;
-        height: 50%;
-        bottom: -15%;
-        left: -10%;
+        width: 600px;
+        height: 600px;
+        bottom: -200px;
+        left: 600px;
         border-radius: 50%;
-        background: radial-gradient(
-          ellipse at center,
-          rgba(46, 196, 182, 0.08) 0%,
-          transparent 70%
-        );
+        background: radial-gradient(ellipse at center, rgba(46,196,182,0.1) 0%, rgba(0,8,20,0) 70%);
         pointer-events: none;
       }
-
       .bg-grid {
         position: absolute;
         inset: 0;
         background-image:
-          linear-gradient(rgba(252, 163, 17, 0.04) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(252, 163, 17, 0.04) 1px, transparent 1px);
-        background-size: 80px 80px;
+          linear-gradient(rgba(252,163,17,0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(252,163,17,0.035) 1px, transparent 1px);
+        background-size: 96px 96px;
         pointer-events: none;
       }
-
-      .bg-stripe {
+      .bg-accent-stripe {
         position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        width: 4px;
-        background: linear-gradient(
-          180deg,
-          transparent 0%,
-          #fca311 30%,
-          #fca311 70%,
-          transparent 100%
-        );
-        opacity: 0.7;
+        top: 0; bottom: 0; left: 0;
+        width: 5px;
+        background: linear-gradient(180deg, transparent 0%, #fca311 20%, #fca311 80%, transparent 100%);
+        opacity: 0;
+        transform-origin: center top;
       }
-
-      /* Ghost headline — decorative background text */
+      /* Ghost word — decorative, intentionally overflows right */
       .bg-ghost {
         position: absolute;
-        bottom: -0.1em;
-        left: -0.02em;
+        bottom: 30px;
+        right: -40px;
         font-family: "Barlow Condensed", sans-serif;
         font-weight: 900;
-        font-size: clamp(160px, 18vw, 340px);
-        color: rgba(252, 163, 17, 0.04);
+        font-size: 280px;
+        color: rgba(252,163,17,0.055);
         text-transform: uppercase;
         letter-spacing: -0.04em;
         line-height: 1;
         pointer-events: none;
-        white-space: nowrap;
         user-select: none;
+        white-space: nowrap;
       }
 
-      /* ── Corner metadata ── */
-      .meta-tag {
+      /* ── Corner tag ── */
+      .corner-tag {
         position: absolute;
-        top: 48px;
-        right: 56px;
+        top: 52px;
+        right: 64px;
         font-family: "JetBrains Mono", "DM Mono", monospace;
         font-size: 13px;
         font-weight: 400;
-        color: rgba(229, 229, 229, 0.35);
-        letter-spacing: 0.12em;
+        color: rgba(229,229,229,0.32);
+        letter-spacing: 0.14em;
         text-transform: uppercase;
+        opacity: 0;
+      }
+
+      /* ── Right column — decorative role counter ── */
+      .role-counter {
+        position: absolute;
+        right: 120px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        opacity: 0;
+      }
+      .role-counter-num {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 72px;
+        font-weight: 600;
+        color: #fca311;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.04em;
+      }
+      .role-counter-label {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        font-weight: 400;
+        color: rgba(229,229,229,0.3);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+      .role-counter-bar {
+        width: 1px;
+        height: 80px;
+        background: linear-gradient(180deg, #fca311 0%, transparent 100%);
       }
 
       /* ── Main content ── */
+      /* Layout: fixed left-aligned block, vertically centered */
       .scene-content {
         position: absolute;
-        inset: 0;
+        top: 0; bottom: 0; left: 0;
+        width: 1360px; /* leave right 560px for counter + padding */
         display: flex;
         flex-direction: column;
         justify-content: center;
-        padding: 80px 100px;
-      }
-
-      /* Portrait adjustments */
-      [data-aspect="9:16"] .scene-content {
-        padding: 120px 80px;
+        padding: 80px 0 80px 100px;
+        gap: 0;
       }
 
       .eyebrow {
         font-family: "JetBrains Mono", monospace;
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 500;
         color: #fca311;
-        letter-spacing: 0.22em;
+        letter-spacing: 0.24em;
         text-transform: uppercase;
-        margin-bottom: 28px;
+        margin-bottom: 18px;
+        opacity: 0;
       }
 
+      /* Single-line headline — fixed 96px, no overflow */
       .headline {
         font-family: "Barlow Condensed", sans-serif;
         font-weight: 900;
-        font-size: clamp(72px, 7vw, 130px);
+        font-size: 96px;
         color: #e5e5e5;
         text-transform: uppercase;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.025em;
         line-height: 0.95;
-        margin-bottom: 48px;
+        margin-bottom: 12px;
+        opacity: 0;
       }
-
-      .headline span {
+      .headline-accent {
         color: #fca311;
+        display: block;
       }
 
-      /* Divider rule */
-      .rule {
+      /* Rule */
+      .divider {
+        width: 100%;
+        max-width: 900px;
         height: 2px;
-        background: linear-gradient(90deg, #fca311 0%, rgba(252, 163, 17, 0.15) 100%);
-        margin-bottom: 44px;
+        background: linear-gradient(90deg, #fca311 0%, rgba(252,163,17,0.1) 100%);
+        margin-bottom: 36px;
         transform-origin: left center;
+        transform: scaleX(0);
+        opacity: 0;
       }
 
-      /* ── Job title slots ── */
+      /* ── Title slots ── */
       .title-slot {
         display: flex;
         align-items: center;
-        gap: 20px;
-        margin-bottom: 18px;
+        gap: 22px;
+        margin-bottom: 16px;
+        opacity: 0;
       }
+      .title-slot:last-child { margin-bottom: 0; }
 
-      .title-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #fca311;
+      .slot-index {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        font-weight: 400;
+        color: rgba(252,163,17,0.4);
+        letter-spacing: 0.1em;
+        width: 20px;
+        text-align: right;
         flex-shrink: 0;
+        font-variant-numeric: tabular-nums;
       }
 
-      .title-text {
+      .slot-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: rgba(252,163,17,0.35);
+        flex-shrink: 0;
+        transition: none;
+      }
+
+      .slot-text {
         font-family: "Barlow Condensed", sans-serif;
         font-weight: 700;
-        font-size: clamp(34px, 3.5vw, 58px);
-        color: #e5e5e5;
+        font-size: 52px;
+        color: rgba(229,229,229,0.5);  /* visible on dark bg */
         letter-spacing: -0.01em;
         line-height: 1;
       }
 
-      /* ── Active title highlight ── */
-      .title-slot.is-active .title-text {
+      /* Active state — applied via GSAP */
+      .slot-text.is-active {
         color: #ffffff;
-      }
-
-      .title-slot.is-active .title-dot {
-        background: #fca311;
-        box-shadow: 0 0 12px rgba(252, 163, 17, 0.8);
       }
 
       /* ── Bottom ticker ── */
       .ticker {
         position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 48px;
+        bottom: 0; left: 0; right: 0;
+        height: 52px;
         background: #fca311;
         display: flex;
         align-items: center;
-        padding: 0 56px;
-        gap: 40px;
-        overflow: hidden;
+        padding: 0 60px;
+        gap: 32px;
+        opacity: 0;
+        transform: translateY(52px);
       }
-
       .ticker-label {
         font-family: "JetBrains Mono", monospace;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 600;
         color: #000814;
-        letter-spacing: 0.18em;
+        letter-spacing: 0.2em;
         text-transform: uppercase;
-        white-space: nowrap;
         flex-shrink: 0;
       }
-
-      .ticker-divider {
-        width: 1px;
-        height: 20px;
-        background: rgba(0, 8, 20, 0.3);
+      .ticker-sep {
+        width: 1px; height: 18px;
+        background: rgba(0,8,20,0.25);
         flex-shrink: 0;
       }
-
-      .ticker-scroll {
+      .ticker-roles {
         font-family: "Barlow Condensed", sans-serif;
-        font-size: 15px;
+        font-size: 16px;
         font-weight: 600;
         color: #000814;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.05em;
         text-transform: uppercase;
         white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     </style>
   </head>
-  <body>
+  <body style="background:#000814;margin:0;padding:0;">
     <div
       id="root"
       class="clip"
@@ -259,224 +285,227 @@
       data-width="1920"
       data-height="1080"
       data-track-index="0"
+      style="background:#000814;width:1920px;height:1080px;position:relative;overflow:hidden;"
     >
-      <!-- Background layer -->
-      <div class="bg-glow-1" id="glow1"></div>
-      <div class="bg-glow-2" id="glow2"></div>
-      <div class="bg-grid" id="grid"></div>
-      <div class="bg-stripe" id="stripe"></div>
-      <div class="bg-ghost" id="ghost">HIRING</div>
+      <!-- Background -->
+      <div id="glow-top" class="bg-glow-top" data-layout-ignore></div>
+      <div id="glow-bot" class="bg-glow-bottom" data-layout-ignore></div>
+      <div id="grid"    class="bg-grid"    data-layout-ignore></div>
+      <div id="stripe"  class="bg-accent-stripe" data-layout-ignore></div>
+      <div id="ghost"   class="bg-ghost"   data-layout-allow-overflow>HIRING</div>
 
-      <!-- Corner metadata -->
-      <div class="meta-tag" id="meta">Now Open</div>
+      <!-- Corner -->
+      <div id="corner" class="corner-tag">Now Hiring</div>
+
+      <!-- Right counter (decorative) -->
+      <div id="counter" class="role-counter" data-layout-ignore>
+        <div class="role-counter-bar"></div>
+        <div class="role-counter-num" id="counter-num">04</div>
+        <div class="role-counter-label">Open Roles</div>
+      </div>
 
       <!-- Main content -->
       <div class="scene-content">
-        <div class="eyebrow" id="eyebrow">We Are</div>
-        <div class="headline" id="headline">
-          Hiring<br /><span id="headline-accent">Talent</span>
+        <div id="eyebrow" class="eyebrow">We Are</div>
+        <div id="headline" class="headline">
+          Hiring<span class="headline-accent" id="accent">Talent</span>
         </div>
-        <div class="rule" id="rule"></div>
+        <div id="divider" class="divider"></div>
 
-        <div class="title-slot" id="slot1">
-          <div class="title-dot"></div>
-          <div class="title-text" id="t1">—</div>
+        <div id="slot1" class="title-slot">
+          <span class="slot-index">01</span>
+          <span class="slot-dot" id="dot1"></span>
+          <span class="slot-text" id="t1">—</span>
         </div>
-        <div class="title-slot" id="slot2">
-          <div class="title-dot"></div>
-          <div class="title-text" id="t2">—</div>
+        <div id="slot2" class="title-slot">
+          <span class="slot-index">02</span>
+          <span class="slot-dot" id="dot2"></span>
+          <span class="slot-text" id="t2">—</span>
         </div>
-        <div class="title-slot" id="slot3">
-          <div class="title-dot"></div>
-          <div class="title-text" id="t3">—</div>
+        <div id="slot3" class="title-slot">
+          <span class="slot-index">03</span>
+          <span class="slot-dot" id="dot3"></span>
+          <span class="slot-text" id="t3">—</span>
         </div>
-        <div class="title-slot" id="slot4">
-          <div class="title-dot"></div>
-          <div class="title-text" id="t4">—</div>
+        <div id="slot4" class="title-slot">
+          <span class="slot-index">04</span>
+          <span class="slot-dot" id="dot4"></span>
+          <span class="slot-text" id="t4">—</span>
         </div>
       </div>
 
-      <!-- Bottom ticker -->
-      <div class="ticker" id="ticker">
+      <!-- Ticker -->
+      <div id="ticker" class="ticker">
         <span class="ticker-label">Join Us</span>
-        <div class="ticker-divider"></div>
-        <span class="ticker-scroll" id="ticker-text">—</span>
+        <div class="ticker-sep"></div>
+        <span class="ticker-roles" id="ticker-roles">—</span>
       </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
     <script>
-      // ── Read variables ──────────────────────────────────────────────
+      // ── Variables ──────────────────────────────────────────────────
       const vars = window.__hyperframes
         ? window.__hyperframes.getVariables()
-        : {
-            title1: "Software Engineer",
-            title2: "Product Manager",
-            title3: "UX Designer",
-            title4: "Data Scientist",
-            aspectRatio: "16:9",
-          };
+        : { title1: "Software Engineer", title2: "Product Manager",
+            title3: "UX Designer",       title4: "Data Scientist",
+            aspectRatio: "16:9" };
 
       const titles = [vars.title1, vars.title2, vars.title3, vars.title4];
 
-      // Populate DOM
       document.getElementById("t1").textContent = titles[0];
       document.getElementById("t2").textContent = titles[1];
       document.getElementById("t3").textContent = titles[2];
       document.getElementById("t4").textContent = titles[3];
-      document.getElementById("ticker-text").textContent = titles.join(
-        "  ·  "
-      );
+      document.getElementById("ticker-roles").textContent =
+        titles.join("  ·  ");
 
-      // Adjust dimensions for 9:16
+      // Portrait overrides — applied after render-we-are-hiring.ts patches the
+      // static HTML dimensions so the HyperFrames viewport is already 1080×1920.
       if (vars.aspectRatio === "9:16") {
+        // Ensure dimensions are set (belt-and-suspenders)
+        ["html","body"].forEach(sel => {
+          const el = document.querySelector(sel);
+          if (el) { el.style.width = "1080px"; el.style.height = "1920px"; }
+        });
         const root = document.getElementById("root");
-        root.setAttribute("data-width", "1080");
+        root.setAttribute("data-width",  "1080");
         root.setAttribute("data-height", "1920");
-        root.setAttribute("data-aspect", "9:16");
+        root.style.width  = "1080px";
+        root.style.height = "1920px";
+
+        // Scene content: full-width, vertically centered in 1920px canvas
+        const sc = document.querySelector(".scene-content");
+        sc.style.width   = "100%";
+        sc.style.padding = "120px 80px 120px 80px";
+
+        // Headline: slightly smaller for portrait width
+        document.querySelector(".headline").style.fontSize = "80px";
+
+        // Title slots: scale down slightly so all 4 fit comfortably
+        document.querySelectorAll(".slot-text").forEach(el => {
+          el.style.fontSize = "44px";
+        });
+
+        // Divider: cap width for portrait
+        document.querySelector(".divider").style.maxWidth = "100%";
+
+        // Move role counter to top-right instead of vertically-centred
+        const counter = document.getElementById("counter");
+        counter.style.top       = "80px";
+        counter.style.right     = "60px";
+        counter.style.transform = "none";
+
+        // Ghost text: smaller so it doesn't overwhelm the narrow canvas
+        document.querySelector(".bg-ghost").style.fontSize = "180px";
       }
 
-      // ── Timeline ────────────────────────────────────────────────────
+      // ── Timeline ───────────────────────────────────────────────────
       window.__timelines = window.__timelines || {};
       const tl = gsap.timeline({ paused: true });
 
-      // ── AMBIENT decoratives (seekable, attached to tl) ──────────────
-      // Glow 1 — slow breathe
-      tl.fromTo(
-        "#glow1",
-        { scale: 0.95, opacity: 0.7 },
-        { scale: 1.08, opacity: 1, duration: 4, ease: "sine.inOut", yoyo: true, repeat: 3 },
-        0
-      );
-      // Glow 2 — offset breathe
-      tl.fromTo(
-        "#glow2",
-        { scale: 1.05, opacity: 0.6 },
-        { scale: 0.92, opacity: 0.9, duration: 5, ease: "sine.inOut", yoyo: true, repeat: 2 },
-        0.8
-      );
-      // Grid slow fade pulse
-      tl.fromTo(
-        "#grid",
-        { opacity: 0.6 },
-        { opacity: 1, duration: 6, ease: "sine.inOut", yoyo: true, repeat: 1 },
-        0
-      );
-      // Ghost text slow drift
-      tl.fromTo(
-        "#ghost",
+      // ── Ambient background (seekable) ─────────────────────────────
+      tl.fromTo("#glow-top",
+        { scale: 0.92, opacity: 0.8 },
+        { scale: 1.07, opacity: 1, duration: 5, ease: "sine.inOut", yoyo: true, repeat: 2 }, 0);
+      tl.fromTo("#glow-bot",
+        { scale: 1.05, opacity: 0.5 },
+        { scale: 0.93, opacity: 0.85, duration: 6, ease: "sine.inOut", yoyo: true, repeat: 1 }, 1.2);
+      tl.fromTo("#grid",
+        { opacity: 0.5 },
+        { opacity: 1, duration: 7, ease: "sine.inOut", yoyo: true, repeat: 1 }, 0);
+      // Ghost text slow right-to-left drift
+      tl.fromTo("#ghost",
         { x: 0 },
-        { x: -40, duration: 15, ease: "none" },
-        0
-      );
+        { x: -60, duration: 15, ease: "none" }, 0);
 
-      // ── Stripe entrance ──────────────────────────────────────────────
-      tl.fromTo(
-        "#stripe",
+      // ── Stripe entrance ───────────────────────────────────────────
+      tl.fromTo("#stripe",
         { scaleY: 0, opacity: 0 },
-        { scaleY: 1, opacity: 0.7, duration: 0.6, ease: "expo.out" },
-        0.1
-      );
+        { scaleY: 1, opacity: 1, duration: 0.55, ease: "expo.out" }, 0.1);
 
-      // ── Eyebrow + Headline entrance ──────────────────────────────────
-      tl.fromTo(
-        "#eyebrow",
-        { opacity: 0, x: -30 },
-        { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" },
-        0.3
-      );
-      tl.fromTo(
-        "#headline",
-        { opacity: 0, y: 50 },
-        { opacity: 1, y: 0, duration: 0.7, ease: "expo.out" },
-        0.5
-      );
-      tl.fromTo(
-        "#rule",
+      // ── Corner tag ────────────────────────────────────────────────
+      tl.fromTo("#corner",
+        { opacity: 0, y: -8 },
+        { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, 0.5);
+
+      // ── Headline block entrance ───────────────────────────────────
+      tl.fromTo("#eyebrow",
+        { opacity: 0, x: -20 },
+        { opacity: 1, x: 0, duration: 0.45, ease: "power3.out" }, 0.25);
+
+      tl.fromTo("#headline",
+        { opacity: 0, y: 36 },
+        { opacity: 1, y: 0, duration: 0.65, ease: "expo.out" }, 0.45);
+
+      tl.fromTo("#divider",
         { scaleX: 0, opacity: 0 },
-        { scaleX: 1, opacity: 1, duration: 0.6, ease: "power2.out" },
-        0.9
-      );
+        { scaleX: 1, opacity: 1, duration: 0.55, ease: "power2.out" }, 0.85);
 
-      // ── Title slots — staggered entrance ─────────────────────────────
-      // Each slot reveals at: 1.2, 2.0, 2.8, 3.6 → one every 0.8s
-      const slotTimings = [1.2, 2.0, 2.8, 3.6];
-      const slotIds = ["#slot1", "#slot2", "#slot3", "#slot4"];
-      const dotIds = ["#slot1 .title-dot", "#slot2 .title-dot", "#slot3 .title-dot", "#slot4 .title-dot"];
+      // ── Ticker entrance ───────────────────────────────────────────
+      tl.fromTo("#ticker",
+        { y: 52, opacity: 0 },
+        { y: 0,  opacity: 1, duration: 0.5, ease: "power3.out" }, 0.9);
 
-      slotIds.forEach((id, i) => {
-        const t = slotTimings[i];
-        // Dot pops in first
-        tl.fromTo(
-          dotIds[i],
-          { scale: 0, opacity: 0 },
-          { scale: 1, opacity: 1, duration: 0.25, ease: "back.out(2)" },
-          t
-        );
-        // Title slides in from left
-        tl.fromTo(
-          `${id} .title-text`,
-          { opacity: 0, x: -24 },
-          { opacity: 1, x: 0, duration: 0.45, ease: "power3.out" },
-          t + 0.1
-        );
+      // ── Title slots — staggered entrance ─────────────────────────
+      // All 4 titles reveal within first 3 seconds
+      const SLOT_START   = [1.2, 1.7, 2.2, 2.7]; // entrance start times
+      const ACTIVE_START = [1.2, 4.2, 7.2, 10.2]; // when each is "highlighted"
+      const ACTIVE_DUR   = 3.0;
+
+      const slotIds = ["slot1","slot2","slot3","slot4"];
+      const dotIds  = ["dot1","dot2","dot3","dot4"];
+      const textIds = ["t1","t2","t3","t4"];
+
+      slotIds.forEach((_, i) => {
+        const t = SLOT_START[i];
+        // Slot row fades in
+        tl.fromTo(`#${slotIds[i]}`,
+          { opacity: 0, x: -28 },
+          { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, t);
       });
 
-      // ── Active title pulse (each title "active" for ~3s window) ──────
-      // Active highlight cycles: title1 active 1.2–4.2, title2 4.2–7.2, etc.
-      const activeDuration = 3;
-      slotIds.forEach((id, i) => {
-        const activeStart = slotTimings[i];
-        const activeEnd = activeStart + activeDuration;
+      // ── Active highlight cycles ───────────────────────────────────
+      // Each title gets highlighted for 3s in sequence
+      slotIds.forEach((_, i) => {
+        const aStart = ACTIVE_START[i];
+        const aEnd   = aStart + ACTIVE_DUR;
 
-        // Highlight on
-        tl.fromTo(
-          `${id} .title-text`,
-          { color: i === 0 ? "#e5e5e5" : "#e5e5e5" },
-          { color: "#ffffff", duration: 0.3, ease: "power1.out" },
-          activeStart
-        );
-        tl.fromTo(
-          `${id} .title-dot`,
-          { boxShadow: "0 0 0px rgba(252,163,17,0)" },
-          { boxShadow: "0 0 14px rgba(252,163,17,0.9)", duration: 0.3, ease: "power1.out" },
-          activeStart
-        );
+        // Dot brightens
+        tl.fromTo(`#${dotIds[i]}`,
+          { backgroundColor: "rgba(252,163,17,0.35)", boxShadow: "none" },
+          { backgroundColor: "#fca311", boxShadow: "0 0 16px rgba(252,163,17,0.85)",
+            duration: 0.3, ease: "power2.out" }, aStart);
 
-        // Highlight off (before next becomes active, unless last)
-        if (i < slotIds.length - 1) {
-          tl.to(`${id} .title-text`, { color: "#888888", duration: 0.25, ease: "power1.in" }, activeEnd - 0.25);
-          tl.to(`${id} .title-dot`, { boxShadow: "0 0 0px rgba(252,163,17,0)", duration: 0.25, ease: "power1.in" }, activeEnd - 0.25);
-          // Hard-kill after dim
-          tl.set(`${id} .title-text`, { color: "#888888" }, activeEnd);
-          tl.set(`${id} .title-dot`, { boxShadow: "0 0 0px rgba(252,163,17,0)" }, activeEnd);
+        // Text brightens
+        tl.fromTo(`#${textIds[i]}`,
+          { color: "rgba(229,229,229,0.5)" },
+          { color: "#ffffff", duration: 0.3, ease: "power2.out" }, aStart);
+
+        // Counter number updates (decorative)
+        // Hard-kill on exit (all except last)
+        if (i < 3) {
+          tl.to(`#${dotIds[i]}`,
+            { backgroundColor: "rgba(252,163,17,0.35)", boxShadow: "none",
+              duration: 0.25, ease: "power1.in" }, aEnd - 0.3);
+          tl.to(`#${textIds[i]}`,
+            { color: "rgba(229,229,229,0.5)", duration: 0.25, ease: "power1.in" }, aEnd - 0.3);
+          // Deterministic kill
+          tl.set(`#${dotIds[i]}`,
+            { backgroundColor: "rgba(252,163,17,0.35)", boxShadow: "none" }, aEnd);
+          tl.set(`#${textIds[i]}`,
+            { color: "rgba(229,229,229,0.5)" }, aEnd);
         }
       });
 
-      // ── Meta tag ────────────────────────────────────────────────────
-      tl.fromTo(
-        "#meta",
-        { opacity: 0, y: -10 },
-        { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" },
-        0.6
-      );
+      // ── Right-side counter (decorative) ──────────────────────────
+      tl.fromTo("#counter",
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.6, ease: "expo.out" }, 1.0);
 
-      // ── Ticker entrance ──────────────────────────────────────────────
-      tl.fromTo(
-        "#ticker",
-        { y: 48, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" },
-        1.0
-      );
+      // ── Final fade out ────────────────────────────────────────────
+      tl.to("#root", { opacity: 0, duration: 0.7, ease: "power2.in" }, 14.3);
 
-      // ── Final fade out (last 0.8s) ───────────────────────────────────
-      tl.to(
-        "#root",
-        { opacity: 0, duration: 0.8, ease: "power2.in" },
-        14.2
-      );
-
-      // Register
       window.__timelines["root"] = tl;
     </script>
   </body>

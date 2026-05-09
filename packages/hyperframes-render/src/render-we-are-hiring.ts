@@ -2,7 +2,7 @@
 
 import { execFile } from "child_process";
 import { promisify } from "util";
-import { mkdirSync, copyFileSync, writeFileSync, rmSync, existsSync } from "fs";
+import { mkdirSync, copyFileSync, writeFileSync, rmSync, existsSync, readFileSync } from "fs";
 import { join, dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 
@@ -52,9 +52,25 @@ export async function renderWeAreHiringVideo(
   const projectDir = join(outDir, "hf-project");
   mkdirSync(projectDir, { recursive: true });
 
-  // ── 2. Copy composition into project ──────────────────────────────
+  // ── 2. Copy composition into project (patching dimensions for portrait) ─
   const compositionSrc = resolve(__dirname, "compositions/we-are-hiring.html");
-  copyFileSync(compositionSrc, join(projectDir, "index.html"));
+  let htmlContent = readFileSync(compositionSrc, "utf-8");
+
+  if (aspectRatio === "9:16") {
+    // HyperFrames reads data-width/data-height from static HTML to set the
+    // Chrome viewport BEFORE JS runs. Patch them here so the viewport is
+    // correctly set to 1080×1920, otherwise everything below y=1080 is cut.
+    htmlContent = htmlContent
+      // Root element data attributes
+      .replace('data-width="1920"', 'data-width="1080"')
+      .replace('data-height="1080"', 'data-height="1920"')
+      // Root element inline style
+      .replace('background:#000814;width:1920px;height:1080px;position:relative;overflow:hidden;', 'background:#000814;width:1080px;height:1920px;position:relative;overflow:hidden;')
+      // CSS: html, body
+      .replace('width: 1920px;\n        height: 1080px;\n        overflow: hidden;\n        background: #000814;\n      }\n\n      /* ── Root ── */\n      [data-composition-id="root"] {\n        position: relative;\n        width: 1920px;\n        height: 1080px;', 'width: 1080px;\n        height: 1920px;\n        overflow: hidden;\n        background: #000814;\n      }\n\n      /* ── Root ── */\n      [data-composition-id="root"] {\n        position: relative;\n        width: 1080px;\n        height: 1920px;');
+  }
+
+  writeFileSync(join(projectDir, "index.html"), htmlContent, "utf-8");
 
   // ── 3. Write meta.json (required by Hyperframes) ──────────────────
   writeFileSync(
