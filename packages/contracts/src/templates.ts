@@ -1,12 +1,16 @@
 export type AspectRatioId = "9:16" | "16:9";
 
+export type TemplateId = "linkedin-three-beat-v1" | "we-are-hiring-v1";
+
 export type VideoTemplate = {
-  id: "linkedin-three-beat-v1";
+  id: TemplateId;
   label: string;
   description: string;
   slideCount: number;
   /** Seconds per slide; length must equal slideCount */
   slideDurationsSec: number[];
+  /** Aspect ratio required for this template */
+  aspectRatio: AspectRatioId;
 };
 
 export const VIDEO_TEMPLATES: VideoTemplate[] = [
@@ -16,6 +20,15 @@ export const VIDEO_TEMPLATES: VideoTemplate[] = [
     description: "Hook, supporting insight, CTA—three slides, fixed pacing.",
     slideCount: 3,
     slideDurationsSec: [5, 5, 5],
+    aspectRatio: "16:9",
+  },
+  {
+    id: "we-are-hiring-v1",
+    label: "We Are Hiring",
+    description: "Animated job listings with circular bullets and fade-in animations.",
+    slideCount: 1,
+    slideDurationsSec: [15],
+    aspectRatio: "9:16",
   },
 ];
 

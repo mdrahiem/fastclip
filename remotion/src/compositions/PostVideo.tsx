@@ -6,6 +6,7 @@ import {
 } from "remotion";
 import type { SlidePlan, ThemePack } from "@video-gen/contracts";
 import { Slide } from "../components/Slide";
+import { SlideWrapper } from "../components/SlideWrapper";
 
 export type PostVideoProps = {
   slidePlan: SlidePlan;
@@ -30,12 +31,15 @@ export function PostVideo({
       <Series>
         {slides.map((slide, i) => {
           const sec = slideDurationsSec[i] ?? 0;
+          const durationInFrames = Math.round(sec * FPS);
           return (
             <Series.Sequence
               key={slide.index}
-              durationInFrames={Math.round(sec * FPS)}
+              durationInFrames={durationInFrames}
             >
-              <Slide slide={slide} theme={theme} />
+              <SlideWrapper durationInFrames={durationInFrames}>
+                <Slide slide={slide} theme={theme} />
+              </SlideWrapper>
             </Series.Sequence>
           );
         })}

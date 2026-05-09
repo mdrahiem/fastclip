@@ -25,7 +25,15 @@ export type RenderRequest = {
   slideDurationsSec: number[];
   theme: ThemePack;
   aspectRatioId: AspectRatioId;
-  audioSrc: string;
+  audioSrc?: string;
+};
+
+export type WeAreHiringRenderRequest = {
+  remotionEntry: string;
+  outputLocation: string;
+  jobTitles: [string, string, string, string];
+  theme: ThemePack;
+  audioSrc?: string;
 };
 
 /** Same resolution as {@link DEFAULT_REMOTION_ENTRY}; useful when overriding cwd. */
@@ -78,6 +86,41 @@ export async function renderLinkedInPostVideo(
       slideDurationsSec: req.slideDurationsSec,
       theme: req.theme,
       aspectRatioId: req.aspectRatioId,
+      audioSrc: req.audioSrc,
+    },
+    chromeMode: "headless-shell",
+    ffmpegOverride,
+  });
+}
+
+export async function renderWeAreHiringVideo(
+  req: WeAreHiringRenderRequest,
+): Promise<void> {
+  const serveUrl = await getCachedServeUrl(req.remotionEntry);
+  const DurationSeconds = 15;
+  const FPS = 30;
+  const durationInFrames = DurationSeconds * FPS;
+
+  const composition = await selectComposition({
+    serveUrl,
+    id: "WeAreHiringVideo",
+    inputProps: {
+      positions: req.jobTitles,
+      theme: req.theme,
+      durationInFrames,
+      audioSrc: req.audioSrc,
+    },
+  });
+
+  await renderMedia({
+    composition,
+    serveUrl,
+    codec: "h264",
+    outputLocation: req.outputLocation,
+    inputProps: {
+      positions: req.jobTitles,
+      theme: req.theme,
+      durationInFrames,
       audioSrc: req.audioSrc,
     },
     chromeMode: "headless-shell",

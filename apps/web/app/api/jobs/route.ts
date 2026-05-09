@@ -22,18 +22,27 @@ import {
 } from "@/lib/session";
 
 const createJobSchema = z
-  .object({
-    postText: z.string().min(1),
-    aspectRatio: z.enum(["9:16", "16:9"]),
-    musicMode: z.enum(["builtin", "upload"]),
-    builtinTrackId: z.string().min(1).optional(),
-    base64Music: z.string().optional(),
-    templateId: z.literal("linkedin-three-beat-v1").optional(),
-    themeId: z.literal("graph-paper-v1").optional(),
-  })
+  .union([
+    z.object({
+      templateId: z.literal("linkedin-three-beat-v1"),
+      postText: z.string().min(1),
+      aspectRatio: z.enum(["9:16", "16:9"]),
+      musicMode: z.enum(["builtin", "upload"]),
+      builtinTrackId: z.string().min(1).optional(),
+      base64Music: z.string().optional(),
+      themeId: z.literal("graph-paper-v1").optional(),
+    }),
+    z.object({
+      templateId: z.literal("we-are-hiring-v1"),
+      jobTitles: z.array(z.string().min(1)).length(4),
+      aspectRatio: z.literal("9:16").optional(),
+      themeId: z.literal("graph-paper-v1").optional(),
+    }),
+  ])
   .superRefine((data, ctx) => {
-    if (data.musicMode === "upload") {
-      if (!data.base64Music || data.base64Music.trim().length < 32) {
+    if (data.templateId === "linkedin-three-beat-v1" && data.musicMode === "upload") {
+      const base64Music = (data as any).base64Music;
+      if (!base64Music || base64Music.trim().length < 32) {
         ctx.addIssue({
           code: "custom",
           message: "base64Music required for upload mode.",
@@ -80,11 +89,15 @@ export async function POST(req: Request) {
   }
 
   const data = parsed.data;
-  if (data.postText.length > env.MAX_POST_CHARS) {
-    return NextResponse.json(
-      { error: `postText exceeds ${env.MAX_POST_CHARS} characters.` },
-      { status: 400 },
-    );
+  
+  // Validate postText length if present
+  if (data.templateId === "linkedin-three-beat-v1" && data.postText) {
+    if (data.postText.length > env.MAX_POST_CHARS) {
+      return NextResponse.json(
+        { error: `postText exceeds ${env.MAX_POST_CHARS} characters.` },
+        { status: 400 },
+      );
+    }
   }
 
   const templateId =
@@ -104,47 +117,66 @@ export async function POST(req: Request) {
   await mkdir(jobRoot, { recursive: true });
 
   let uploadStoragePath: string | null = null;
-  if (data.musicMode === "upload" && data.base64Music) {
-    let buf: Buffer;
-    try {
-      buf = Buffer.from(data.base64Music, "base64");
-    } catch {
-      return NextResponse.json({ error: "Invalid base64 music." }, { status: 400 });
+  let builtinTrackId: string | null = null;
+  let aspectRatioValue: "9:16" | "16:9" = "16:9";
+  
+  // Handle LinkedIn Three-Beat template
+  if (data.templateId === "linkedin-three-beat-v1") {
+    if (data.musicMode === "upload" && data.base64Music) {
+      let buf: Buffer;
+      try {
+        buf = Buffer.from(data.base64Music, "base64");
+      } catch {
+        return NextResponse.json({ error: "Invalid base64 music." }, { status: 400 });
+      }
+
+      if (buf.length > env.MAX_MUSIC_BYTES) {
+        return NextResponse.json({ error: "Music file too large." }, { status: 400 });
+      }
+
+      uploadStoragePath = path.join(jobRoot, "upload-input.bin");
+      await writeFile(uploadStoragePath, buf);
     }
 
-    if (buf.length > env.MAX_MUSIC_BYTES) {
-      return NextResponse.json({ error: "Music file too large." }, { status: 400 });
-    }
-
-    uploadStoragePath = path.join(jobRoot, "upload-input.bin");
-    await writeFile(uploadStoragePath, buf);
+    builtinTrackId =
+      data.musicMode === "builtin" ? (data.builtinTrackId ?? "default") : null;
+    
+    aspectRatioValue = data.aspectRatio;
+  } else if (data.templateId === "we-are-hiring-v1") {
+    aspectRatioValue = "9:16";
   }
 
-  const builtinTrackId =
-    data.musicMode === "builtin" ? (data.builtinTrackId ?? "default") : null;
-
   try {
+    const jobValues: Record<string, unknown> = {
+      id: jobId,
+      sessionId,
+      status: "queued",
+      step: "queued",
+      errorMessage: null,
+      createdAt: now,
+      updatedAt: now,
+      deleteAfter: 0,
+      templateId,
+      themeId,
+      aspectRatio: aspectRatioValue,
+      uploadStoragePath,
+      slidePlanJson: null,
+      outputVideoPath: null,
+    };
+
+    if (data.templateId === "linkedin-three-beat-v1") {
+      jobValues.postText = data.postText;
+      jobValues.musicMode = data.musicMode;
+      jobValues.builtinTrackId = builtinTrackId;
+    } else if (data.templateId === "we-are-hiring-v1") {
+      jobValues.jobTitlesJson = JSON.stringify(data.jobTitles);
+      jobValues.musicMode = "builtin"; // We Are Hiring doesn't use music
+      jobValues.builtinTrackId = null;
+    }
+
     getDb()
       .insert(jobs)
-      .values({
-        id: jobId,
-        sessionId,
-        status: "queued",
-        step: "queued",
-        errorMessage: null,
-        createdAt: now,
-        updatedAt: now,
-        deleteAfter: 0,
-        postText: data.postText,
-        templateId,
-        themeId,
-        aspectRatio: data.aspectRatio,
-        musicMode: data.musicMode,
-        builtinTrackId,
-        uploadStoragePath,
-        slidePlanJson: null,
-        outputVideoPath: null,
-      })
+      .values(jobValues as any)
       .run();
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

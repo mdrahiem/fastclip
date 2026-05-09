@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { VIDEO_TEMPLATES, type TemplateId } from "@video-gen/contracts";
 
 type StatusBody = {
   status: string;
@@ -29,9 +30,12 @@ export default function WizardPage() {
   /** Uncontrolled: avoids React controlled `<textarea>` fighting paste / IME / extensions. */
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const feedbackRef = useRef<HTMLDivElement | null>(null);
-  const [aspectRatio, setAspectRatio] = useState<"9:16" | "16:9">("9:16");
+  
+  const [templateId, setTemplateId] = useState<TemplateId>("linkedin-three-beat-v1");
+  const [aspectRatio, setAspectRatio] = useState<"9:16" | "16:9">("16:9");
   const [musicMode, setMusicMode] = useState<"builtin" | "upload">("builtin");
   const [file, setFile] = useState<File | null>(null);
+  const [jobTitles, setJobTitles] = useState<[string, string, string, string]>(["", "", "", ""]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
@@ -79,16 +83,26 @@ export default function WizardPage() {
   );
 
   async function onGenerate() {
-    const text = normalizePostInput(textareaRef.current?.value ?? "");
-    if (!text) {
-      setError("Add some post text first.");
-      scrollFeedbackIntoView();
-      return;
-    }
-    if (musicMode === "upload" && !file) {
-      setError("Choose an audio file for upload.");
-      scrollFeedbackIntoView();
-      return;
+    // Validate based on template
+    if (templateId === "linkedin-three-beat-v1") {
+      const text = normalizePostInput(textareaRef.current?.value ?? "");
+      if (!text) {
+        setError("Add some post text first.");
+        scrollFeedbackIntoView();
+        return;
+      }
+      if (musicMode === "upload" && !file) {
+        setError("Choose an audio file for upload.");
+        scrollFeedbackIntoView();
+        return;
+      }
+    } else if (templateId === "we-are-hiring-v1") {
+      const allFilled = jobTitles.every((title) => title.trim().length > 0);
+      if (!allFilled) {
+        setError("Fill in all 4 job titles.");
+        scrollFeedbackIntoView();
+        return;
+      }
     }
 
     setError(null);
@@ -98,22 +112,32 @@ export default function WizardPage() {
 
     try {
       let base64Music: string | undefined;
-      if (musicMode === "upload") {
-        const uploadFile = file;
-        if (uploadFile) {
-          base64Music = await readFileAsBase64(uploadFile);
+      let postText: string | undefined;
+
+      if (templateId === "linkedin-three-beat-v1") {
+        postText = normalizePostInput(textareaRef.current?.value ?? "");
+        if (musicMode === "upload") {
+          const uploadFile = file;
+          if (uploadFile) {
+            base64Music = await readFileAsBase64(uploadFile);
+          }
         }
       }
 
-      const payload = {
-        postText: text,
-        aspectRatio,
-        musicMode,
-        builtinTrackId: musicMode === "builtin" ? "default" : undefined,
-        base64Music,
-        templateId: "linkedin-three-beat-v1" as const,
+      const payload: Record<string, unknown> = {
+        aspectRatio: templateId === "we-are-hiring-v1" ? "9:16" : aspectRatio,
+        templateId,
         themeId: "graph-paper-v1" as const,
       };
+
+      if (templateId === "linkedin-three-beat-v1") {
+        payload.postText = postText;
+        payload.musicMode = musicMode;
+        payload.builtinTrackId = musicMode === "builtin" ? "default" : undefined;
+        payload.base64Music = base64Music;
+      } else if (templateId === "we-are-hiring-v1") {
+        payload.jobTitles = jobTitles;
+      }
 
       const res = await fetch("/api/jobs", {
         method: "POST",
@@ -165,37 +189,13 @@ export default function WizardPage() {
       }}
     >
       <h1 style={{ fontSize: "1.75rem", letterSpacing: "-0.03em", marginBottom: "0.35rem" }}>
-        LinkedIn post → video
+        Video Generator
       </h1>
       <p style={{ color: "#64748b", marginTop: 0, marginBottom: "28px" }}>
-        Paste your draft, choose layout and audio, run the worker beside the web app,
-        then download an MP4.
+        Select a template, fill in the details, and generate your video.
       </p>
 
-      <label style={{ display: "block", fontWeight: 600, marginBottom: "8px" }}>
-        Post text
-      </label>
-      <textarea
-        ref={textareaRef}
-        name="postText"
-        aria-label="Post text"
-        autoComplete="off"
-        spellCheck={true}
-        defaultValue=""
-        placeholder="Paste your LinkedIn post…"
-        rows={9}
-        style={{
-          width: "100%",
-          boxSizing: "border-box",
-          padding: "12px 14px",
-          borderRadius: 12,
-          border: "1px solid #cbd5e1",
-          fontSize: "0.9375rem",
-          resize: "vertical",
-          marginBottom: "20px",
-        }}
-      />
-
+      {/* Template Selector */}
       <fieldset
         style={{
           border: "1px solid #e2e8f0",
@@ -204,65 +204,160 @@ export default function WizardPage() {
           marginBottom: "20px",
         }}
       >
-        <legend style={{ padding: "0 6px", fontWeight: 600 }}>Aspect ratio</legend>
-        <label style={{ marginRight: "20px", cursor: "pointer" }}>
-          <input
-            type="radio"
-            name="ratio"
-            value="9:16"
-            checked={aspectRatio === "9:16"}
-            onChange={() => setAspectRatio("9:16")}
-          />{" "}
-          9 : 16 (portrait)
-        </label>
-        <label style={{ cursor: "pointer" }}>
-          <input
-            type="radio"
-            name="ratio"
-            value="16:9"
-            checked={aspectRatio === "16:9"}
-            onChange={() => setAspectRatio("16:9")}
-          />{" "}
-          16 : 9 (landscape)
-        </label>
+        <legend style={{ padding: "0 6px", fontWeight: 600 }}>Template</legend>
+        {VIDEO_TEMPLATES.map((template) => (
+          <label key={template.id} style={{ display: "block", marginBottom: "10px", cursor: "pointer" }}>
+            <input
+              type="radio"
+              name="template"
+              value={template.id}
+              checked={templateId === template.id}
+              onChange={() => {
+                setTemplateId(template.id);
+                // Reset form when template changes
+                if (template.id === "we-are-hiring-v1") {
+                  setAspectRatio("9:16");
+                }
+              }}
+            />
+            {" "}
+            <strong>{template.label}</strong>
+            {" "}
+            <span style={{ color: "#94a3b8" }}>({template.description})</span>
+          </label>
+        ))}
       </fieldset>
 
-      <fieldset
-        style={{
-          border: "1px solid #e2e8f0",
-          borderRadius: 12,
-          padding: "14px 16px",
-          marginBottom: "24px",
-        }}
-      >
-        <legend style={{ padding: "0 6px", fontWeight: 600 }}>Music</legend>
-        <label style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "10px" }}>
-          <input
-            type="radio"
-            name="music"
-            checked={musicMode === "builtin"}
-            onChange={() => setMusicMode("builtin")}
+      {/* LinkedIn Three-Beat Form */}
+      {templateId === "linkedin-three-beat-v1" && (
+        <>
+          <label style={{ display: "block", fontWeight: 600, marginBottom: "8px" }}>
+            Post text
+          </label>
+          <textarea
+            ref={textareaRef}
+            name="postText"
+            aria-label="Post text"
+            autoComplete="off"
+            spellCheck={true}
+            defaultValue=""
+            placeholder="Paste your LinkedIn post…"
+            rows={9}
+            style={{
+              width: "100%",
+              boxSizing: "border-box",
+              padding: "12px 14px",
+              borderRadius: 12,
+              border: "1px solid #cbd5e1",
+              fontSize: "0.9375rem",
+              resize: "vertical",
+              marginBottom: "20px",
+            }}
           />
-          Built-in track <span style={{ color: "#94a3b8" }}>(default)</span>
-        </label>
-        <label style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-          <input
-            type="radio"
-            name="music"
-            checked={musicMode === "upload"}
-            onChange={() => setMusicMode("upload")}
-          />
-          Upload audio file
-        </label>
-        {musicMode === "upload" ? (
-          <input
-            type="file"
-            accept="audio/*"
-            style={{ marginTop: "12px", width: "100%" }}
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          />
-        ) : null}
-      </fieldset>
+
+          <fieldset
+            style={{
+              border: "1px solid #e2e8f0",
+              borderRadius: 12,
+              padding: "14px 16px",
+              marginBottom: "20px",
+            }}
+          >
+            <legend style={{ padding: "0 6px", fontWeight: 600 }}>Aspect ratio</legend>
+            <label style={{ marginRight: "20px", cursor: "pointer" }}>
+              <input
+                type="radio"
+                name="ratio"
+                value="9:16"
+                checked={aspectRatio === "9:16"}
+                onChange={() => setAspectRatio("9:16")}
+              />{" "}
+              9 : 16 (portrait)
+            </label>
+            <label style={{ cursor: "pointer" }}>
+              <input
+                type="radio"
+                name="ratio"
+                value="16:9"
+                checked={aspectRatio === "16:9"}
+                onChange={() => setAspectRatio("16:9")}
+              />{" "}
+              16 : 9 (landscape)
+            </label>
+          </fieldset>
+
+          <fieldset
+            style={{
+              border: "1px solid #e2e8f0",
+              borderRadius: 12,
+              padding: "14px 16px",
+              marginBottom: "24px",
+            }}
+          >
+            <legend style={{ padding: "0 6px", fontWeight: 600 }}>Music</legend>
+            <label style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "10px" }}>
+              <input
+                type="radio"
+                name="music"
+                checked={musicMode === "builtin"}
+                onChange={() => setMusicMode("builtin")}
+              />
+              Built-in track <span style={{ color: "#94a3b8" }}>(default)</span>
+            </label>
+            <label style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <input
+                type="radio"
+                name="music"
+                checked={musicMode === "upload"}
+                onChange={() => setMusicMode("upload")}
+              />
+              Upload audio file
+            </label>
+            {musicMode === "upload" ? (
+              <input
+                type="file"
+                accept="audio/*"
+                style={{ marginTop: "12px", width: "100%" }}
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              />
+            ) : null}
+          </fieldset>
+        </>
+      )}
+
+      {/* We Are Hiring Form */}
+      {templateId === "we-are-hiring-v1" && (
+        <>
+          <label style={{ display: "block", fontWeight: 600, marginBottom: "8px" }}>
+            Job Titles
+          </label>
+          <p style={{ color: "#64748b", fontSize: "0.9rem", marginBottom: "16px" }}>
+            Enter 4 job titles that will appear with animated entrance.
+          </p>
+          {jobTitles.map((title, index) => (
+            <div key={index} style={{ marginBottom: "12px" }}>
+              <input
+                type="text"
+                placeholder={`Job title ${index + 1}`}
+                value={title}
+                onChange={(e) => {
+                  const newTitles = [...jobTitles];
+                  newTitles[index] = e.target.value;
+                  setJobTitles(newTitles as [string, string, string, string]);
+                }}
+                style={{
+                  width: "100%",
+                  boxSizing: "border-box",
+                  padding: "12px 14px",
+                  borderRadius: 8,
+                  border: "1px solid #cbd5e1",
+                  fontSize: "0.9375rem",
+                }}
+              />
+            </div>
+          ))}
+        </>
+      )}
 
       <button
         type="button"

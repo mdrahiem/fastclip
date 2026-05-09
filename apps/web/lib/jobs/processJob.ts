@@ -13,7 +13,7 @@ import { probeAudioDurationSec } from "../audio/probe-duration";
 import { getDb } from "../db";
 import { jobs } from "../db/schema";
 import { getEnv, getLlmConfig } from "../env";
-import { renderLinkedInPostVideo, resolveDefaultRemotionEntry } from "../remotion/render";
+import { renderLinkedInPostVideo, renderWeAreHiringVideo, resolveDefaultRemotionEntry } from "../remotion/render";
 import {
   getBuiltinMusicFilePath,
   getJobDir,
@@ -68,7 +68,56 @@ export async function processJob(jobId: string): Promise<void> {
       recursive: true,
     });
 
+    const templateId = row.templateId as VideoTemplate["id"];
+    const template = getTemplateById(templateId);
+
+    // Handle We Are Hiring template - no audio or LLM planning needed
+    if (templateId === "we-are-hiring-v1") {
+      if (!row.jobTitlesJson) {
+        throw new Error("We Are Hiring template requires jobTitles.");
+      }
+
+      let jobTitles: string[];
+      try {
+        jobTitles = JSON.parse(row.jobTitlesJson);
+      } catch {
+        throw new Error("Invalid job titles data.");
+      }
+
+      if (!Array.isArray(jobTitles) || jobTitles.length !== 4) {
+        throw new Error("We Are Hiring requires exactly 4 job titles.");
+      }
+
+      updateJob(jobId, { step: "rendering" });
+
+      const theme = getThemeById(row.themeId as ThemePack["id"]);
+      const outputLocation = getJobOutputVideoPath(jobId);
+      await mkdir(path.dirname(outputLocation), { recursive: true });
+
+      await renderWeAreHiringVideo({
+        remotionEntry: resolveDefaultRemotionEntry(),
+        outputLocation,
+        jobTitles: jobTitles as [string, string, string, string],
+        theme,
+      });
+
+      const now = Date.now();
+      updateJob(jobId, {
+        step: "complete",
+        status: "complete",
+        outputVideoPath: outputLocation,
+        errorMessage: null,
+        deleteAfter: now + env.JOB_RETENTION_MS,
+      });
+      return;
+    }
+
+    // LinkedIn Three-Beat: original flow with audio and LLM planning
     updateJob(jobId, { step: "resolving_audio" });
+
+    if (!row.postText) {
+      throw new Error("LinkedIn template requires postText.");
+    }
 
     const jobInputAudioDir = getJobInputAudioDir(jobId);
 
@@ -118,9 +167,6 @@ export async function processJob(jobId: string): Promise<void> {
     await copyFile(normalizedPath, getRemotionPublicAudioPath(jobId));
 
     updateJob(jobId, { step: "planning" });
-
-    const templateId = row.templateId as VideoTemplate["id"];
-    const template = getTemplateById(templateId);
 
     const llm = getLlmConfig(env);
     const slidePlan: SlidePlan = await planPost({
