@@ -167,7 +167,7 @@ export async function handleApiRequest(
       }), true;
     }
 
-    // GET /api/jobs/:jobId/download — video download
+    // GET /api/jobs/:jobId/download — video stream (supports Range for <video> seeking)
     const downloadMatch = pathname.match(/^\/api\/jobs\/([^/]+)\/download$/);
     if (downloadMatch && req.method === "GET") {
       const { createReadStream, statSync } = await import("fs");
@@ -177,13 +177,41 @@ export async function handleApiRequest(
       if (job.status !== "complete" || !job.outputVideoPath) {
         return json(res, 400, { error: "Video not ready" }), true;
       }
-      const stat = statSync(job.outputVideoPath);
-      res.writeHead(200, {
-        "Content-Type": "video/mp4",
-        "Content-Length": stat.size,
-        "Content-Disposition": `attachment; filename="hiring-video-${jobId}.mp4"`,
-      });
-      createReadStream(job.outputVideoPath).pipe(res);
+
+      const filePath = job.outputVideoPath;
+      const stat = statSync(filePath);
+      const fileSize = stat.size;
+      const rangeHeader = (req.headers as Record<string, string>).range;
+
+      // Inline by default (for the player); attachment when ?dl=1
+      const disposition = url.searchParams.get("dl")
+        ? `attachment; filename="hiring-video-${jobId}.mp4"`
+        : "inline";
+
+      if (rangeHeader) {
+        // Partial content — supports browser <video> seeking
+        const [startStr, endStr] = rangeHeader.replace(/bytes=/, "").split("-");
+        const start = parseInt(startStr, 10);
+        const end = endStr ? parseInt(endStr, 10) : fileSize - 1;
+        const chunkSize = end - start + 1;
+
+        res.writeHead(206, {
+          "Content-Type": "video/mp4",
+          "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+          "Accept-Ranges": "bytes",
+          "Content-Length": chunkSize,
+          "Content-Disposition": disposition,
+        });
+        createReadStream(filePath, { start, end }).pipe(res);
+      } else {
+        res.writeHead(200, {
+          "Content-Type": "video/mp4",
+          "Content-Length": fileSize,
+          "Accept-Ranges": "bytes",
+          "Content-Disposition": disposition,
+        });
+        createReadStream(filePath).pipe(res);
+      }
       return true;
     }
 

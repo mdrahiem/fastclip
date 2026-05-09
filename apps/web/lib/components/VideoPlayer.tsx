@@ -6,18 +6,20 @@ interface VideoPlayerProps {
 }
 
 export function VideoPlayer({ videoPath, jobId }: VideoPlayerProps) {
-  const downloadUrl = `/api/jobs/${jobId}/download`;
+  const downloadUrl = `/api/jobs/${jobId}/download?dl=1`;
+  // Stream through the API — videoPath is a server disk path the browser can't access.
+  const streamUrl = `/api/jobs/${jobId}/download`;
 
   return (
     <div className="space-y-4">
       <div className="bg-black rounded-lg overflow-hidden">
         <video
-          key={videoPath}
+          key={jobId}
           className="w-full"
           controls
           style={{ aspectRatio: "16 / 9" }}
         >
-          <source src={videoPath} type="video/mp4" />
+          <source src={streamUrl} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
       </div>
