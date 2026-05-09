@@ -1,6 +1,5 @@
 // apps/web/lib/components/EditForm.tsx
 
-"use client";
 
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";

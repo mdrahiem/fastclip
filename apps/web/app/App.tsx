@@ -1,8 +1,10 @@
 // apps/web/app/App.tsx
 
-import React from "react";
 import {
-  createBrowserRouter,
+  createRouter,
+  createRootRoute,
+  createRoute,
+  createMemoryHistory,
   RouterProvider,
   Outlet,
 } from "@tanstack/react-router";
@@ -11,14 +13,14 @@ import IndexPage from "./routes/index";
 import DashboardPage from "./routes/dashboard/$jobId";
 import EditPage from "./routes/edit/$jobId";
 
-// Root layout component
-function RootLayout() {
-  return (
+// Root layout
+const rootRoute = createRootRoute({
+  component: () => (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto px-6 py-4">
           <h1 className="text-2xl font-bold text-gray-900">
-            We Are Hiring - Video Generator
+            We Are Hiring — Video Generator
           </h1>
         </div>
       </header>
@@ -26,30 +28,40 @@ function RootLayout() {
         <Outlet />
       </main>
     </div>
-  );
-}
+  ),
+});
 
-// Create router
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <RootLayout />,
-    children: [
-      {
-        index: true,
-        element: <IndexPage />,
-      },
-      {
-        path: "/dashboard/:jobId",
-        element: <DashboardPage />,
-      },
-      {
-        path: "/edit/:jobId",
-        element: <EditPage />,
-      },
-    ],
-  },
+const indexRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/",
+  component: IndexPage,
+});
+
+const dashboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/dashboard/$jobId",
+  component: DashboardPage,
+});
+
+const editRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/edit/$jobId",
+  component: EditPage,
+});
+
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  dashboardRoute,
+  editRoute,
 ]);
+
+const router = createRouter({ routeTree });
+
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
+  }
+}
 
 export default function App() {
   return <RouterProvider router={router} />;

@@ -1,6 +1,5 @@
 // apps/web/app/routes/dashboard/$jobId.tsx
 
-"use client";
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "@tanstack/react-router";
@@ -10,7 +9,7 @@ import { JobStatus } from "@/lib/components/JobStatus";
 import { VideoPlayer } from "@/lib/components/VideoPlayer";
 
 export default function DashboardPage() {
-  const { jobId } = useParams({ from: "/dashboard/:jobId" });
+  const { jobId } = useParams({ strict: false });
   const navigate = useNavigate();
   const { status, error: pollingError } = useJobPolling(jobId);
   const [

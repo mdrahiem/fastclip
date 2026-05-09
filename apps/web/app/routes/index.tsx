@@ -1,6 +1,5 @@
 // apps/web/app/routes/index.tsx
 
-"use client";
 
 import { useNavigate } from "@tanstack/react-router";
 import { JobForm } from "@/lib/components/JobForm";

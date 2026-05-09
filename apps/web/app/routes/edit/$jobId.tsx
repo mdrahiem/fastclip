@@ -1,6 +1,5 @@
 // apps/web/app/routes/edit/$jobId.tsx
 
-"use client";
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "@tanstack/react-router";
@@ -8,7 +7,7 @@ import { getJob } from "@/app/lib/api";
 import { EditForm } from "@/lib/components/EditForm";
 
 export default function EditPage() {
-  const { jobId } = useParams({ from: "/edit/:jobId" });
+  const { jobId } = useParams({ strict: false });
   const navigate = useNavigate();
   const [
     jobDetails,
