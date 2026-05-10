@@ -15,6 +15,9 @@ swap_size_mb = 1024
   MAX_JOB_TITLES_LENGTH = "100"
   RATE_LIMIT_JOBS_PER_HOUR = "10"
 
+[deploy]
+  release_command = "npx prisma db push"
+
 [http_service]
   internal_port = 8080
   force_https = true

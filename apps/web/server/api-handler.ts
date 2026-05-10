@@ -5,7 +5,7 @@ import type { IncomingMessage, ServerResponse } from "http";
 import { getDb } from "./db";
 import { checkRateLimit } from "./rate-limit";
 import { getOrCreateSession } from "./session";
-import { createJobSchema, updateJobSchema } from "@video-gen/contracts";
+import { createJobSchema, updateJobSchema } from "../../../packages/contracts/src";
 import { randomUUID } from "crypto";
 import { JOB_RETENTION_MS } from "../lib/constants";
 

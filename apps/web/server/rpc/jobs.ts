@@ -5,8 +5,8 @@ import type {
   CreateJobInput,
   UpdateJobInput,
   JobStatusResponse,
-} from "@video-gen/contracts";
-import { createJobSchema, updateJobSchema } from "@video-gen/contracts";
+} from "../../../../packages/contracts/src";
+import { createJobSchema, updateJobSchema } from "../../../../packages/contracts/src";
 import { getDb } from "../db";
 import { getEnv } from "../env";
 import { checkRateLimit } from "../rate-limit";

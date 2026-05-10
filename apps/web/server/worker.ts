@@ -3,7 +3,7 @@
 import path from "path";
 import { getDb } from "./db";
 import { getEnv } from "./env";
-import { renderWeAreHiringVideo } from "@video-gen/hyperframes-render";
+import { renderWeAreHiringVideo } from "../../../packages/hyperframes-render/src";
 
 const POLL_INTERVAL_MS = 2000;
 
