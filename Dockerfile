@@ -50,8 +50,8 @@ ENV CHROME_BIN=/usr/bin/chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-# Install pnpm and tsx globally
-RUN npm install -g pnpm@9 tsx
+# Install pnpm globally
+RUN npm install -g pnpm@9
 
 # Set working directory
 WORKDIR /app
@@ -65,6 +65,9 @@ COPY prisma ./prisma
 
 # Install dependencies (no lockfile yet, so we can't use --frozen-lockfile)
 RUN pnpm install
+
+# Install tsx locally for runtime TypeScript execution
+RUN pnpm add -D tsx -w
 
 # Copy source code
 COPY . .
@@ -93,4 +96,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD node -e "require('http').get('http://localhost:8080/', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"
 
 # Start production server (web + worker)
-CMD ["node", "--import", "tsx/esm", "apps/web/server/production.ts"]
+CMD ["npx", "tsx", "apps/web/server/production.ts"]
