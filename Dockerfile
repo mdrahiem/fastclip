@@ -81,6 +81,10 @@ RUN pnpm build
 # Create data directory for SQLite and job outputs
 RUN mkdir -p /app/data/jobs
 
+# Copy startup script
+COPY docker-start.sh /app/docker-start.sh
+RUN chmod +x /app/docker-start.sh
+
 # Set production environment
 ENV NODE_ENV=production
 ENV DATABASE_URL=file:./data/app.db
@@ -95,5 +99,5 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD node -e "require('http').get('http://localhost:8080/', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"
 
-# Start production server (web + worker)
-CMD ["npx", "tsx", "apps/web/server/production.ts"]
+# Start production server (web + worker) via startup script that initializes DB
+CMD ["/app/docker-start.sh"]
