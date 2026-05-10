@@ -61,13 +61,14 @@ export async function renderWeAreHiringVideo(
     // Chrome viewport BEFORE JS runs. Patch them here so the viewport is
     // correctly set to 1080×1920, otherwise everything below y=1080 is cut.
     htmlContent = htmlContent
-      // Root element data attributes
-      .replace('data-width="1920"', 'data-width="1080"')
-      .replace('data-height="1080"', 'data-height="1920"')
-      // Root element inline style
-      .replace('background:#000814;width:1920px;height:1080px;position:relative;overflow:hidden;', 'background:#000814;width:1080px;height:1920px;position:relative;overflow:hidden;')
-      // CSS: html, body
-      .replace('width: 1920px;\n        height: 1080px;\n        overflow: hidden;\n        background: #000814;\n      }\n\n      /* ── Root ── */\n      [data-composition-id="root"] {\n        position: relative;\n        width: 1920px;\n        height: 1080px;', 'width: 1080px;\n        height: 1920px;\n        overflow: hidden;\n        background: #000814;\n      }\n\n      /* ── Root ── */\n      [data-composition-id="root"] {\n        position: relative;\n        width: 1080px;\n        height: 1920px;');
+      // Update all clip data-width/data-height attributes
+      .replaceAll('data-width="1920"', 'data-width="1080"')
+      .replaceAll('data-height="1080"', 'data-height="1920"')
+      // CSS: html, body dimensions
+      .replace(
+        'width: 1920px;\n      height: 1080px;\n      overflow: hidden;\n      background: #000814;',
+        'width: 1080px;\n      height: 1920px;\n      overflow: hidden;\n      background: #000814;'
+      );
   }
 
   writeFileSync(join(projectDir, "index.html"), htmlContent, "utf-8");

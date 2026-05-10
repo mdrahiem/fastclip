@@ -222,15 +222,13 @@ export async function handleApiRequest(
       // Patch HTML dimensions for portrait so the studio viewport is correct
       if (aspectRatio === "9:16") {
         htmlContent = htmlContent
-          .replace('data-width="1920"', 'data-width="1080"')
-          .replace('data-height="1080"', 'data-height="1920"')
+          // Update all clip data-width/data-height attributes
+          .replaceAll('data-width="1920"', 'data-width="1080"')
+          .replaceAll('data-height="1080"', 'data-height="1920"')
+          // CSS: html, body dimensions
           .replace(
-            'background:#000814;width:1920px;height:1080px;position:relative;overflow:hidden;',
-            'background:#000814;width:1080px;height:1920px;position:relative;overflow:hidden;'
-          )
-          .replace(
-            'width: 1920px;\n        height: 1080px;\n        overflow: hidden;\n        background: #000814;\n      }\n\n      /* \u2500\u2500 Root \u2500\u2500 */\n      [data-composition-id="root"] {\n        position: relative;\n        width: 1920px;\n        height: 1080px;',
-            'width: 1080px;\n        height: 1920px;\n        overflow: hidden;\n        background: #000814;\n      }\n\n      /* \u2500\u2500 Root \u2500\u2500 */\n      [data-composition-id="root"] {\n        position: relative;\n        width: 1080px;\n        height: 1920px;'
+            'width: 1920px;\n      height: 1080px;\n      overflow: hidden;\n      background: #000814;',
+            'width: 1080px;\n      height: 1920px;\n      overflow: hidden;\n      background: #000814;'
           );
       }
 
@@ -241,26 +239,50 @@ export async function handleApiRequest(
         "utf-8"
       );
 
-      // Find hyperframes binary
+      // Find hyperframes binary — search known pnpm locations relative to repo root
+      const repoRoot = resolve(process.cwd(), "../..");
       const hfCandidates = [
-        resolve(process.cwd(), "node_modules/.bin/hyperframes"),
-        resolve(process.cwd(), "node_modules/.pnpm/node_modules/.bin/hyperframes"),
-        "hyperframes",
+        resolve(repoRoot, "packages/hyperframes-render/node_modules/.bin/hyperframes"),
+        resolve(repoRoot, "node_modules/.pnpm/node_modules/.bin/hyperframes"),
+        resolve(repoRoot, "node_modules/.bin/hyperframes"),
       ];
       const { existsSync } = await import("fs");
-      const hfBin = hfCandidates.find(existsSync) ?? "hyperframes";
+      const hfBin = hfCandidates.find(existsSync);
+      if (!hfBin) {
+        return json(res, 500, {
+          error: `hyperframes binary not found. Searched:\n  ${hfCandidates.join("\n  ")}`
+        }), true;
+      }
 
       const port = 3002;
       const studioUrl = `http://localhost:${port}`;
 
+      // Kill any existing preview on this port (leftover from a previous session)
+      const { execSync } = await import("child_process");
+      try {
+        execSync(`lsof -ti:${port} | xargs kill -9 2>/dev/null || true`, { timeout: 3000 });
+        // Wait for port to free up
+        await new Promise((r) => setTimeout(r, 500));
+      } catch {
+        // No process on port — proceed
+      }
+
+      // Remove stale studio dir so HyperFrames starts fresh
+      try {
+        const { rmSync } = await import("fs");
+        rmSync(resolve(studioDir, ".hyperframes"), { recursive: true, force: true });
+      } catch {}
+
       // Spawn a detached preview server (fire-and-forget)
-      const child = spawn(hfBin, ["preview", studioDir, `--port`, String(port), "--force-new"], {
+      const child = spawn(hfBin, ["preview", studioDir, "--port", String(port)], {
         detached: true,
         stdio: "ignore",
       });
+      child.on("error", (err) => {
+        console.error("[studio] hyperframes preview failed to start:", err.message);
+      });
       child.unref();
 
-      // Give the server a moment to bind before the browser hits it
       await new Promise((r) => setTimeout(r, 1500));
 
       return json(res, 200, { studioUrl }), true;
