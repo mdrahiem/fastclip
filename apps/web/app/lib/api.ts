@@ -64,6 +64,3 @@ export function updateJob(
   });
 }
 
-export function openStudio(jobId: string): Promise<{ studioUrl: string }> {
-  return apiFetch(`/api/jobs/${jobId}/studio`, { method: "POST" });
-}
