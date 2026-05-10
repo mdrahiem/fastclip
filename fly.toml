@@ -1,0 +1,47 @@
+app = "fastclip"
+primary_region = "ord"
+
+swap_size_mb = 1024
+
+[build]
+
+[env]
+  NODE_ENV = "production"
+  PORT = "8080"
+  DATABASE_URL = "file:./data/app.db"
+  HYPERFRAMES_CLI_PATH = "hyperframes"
+  PUBLIC_MUSIC_PATH = "./apps/web/public/music/default.mp3"
+  JOB_RETENTION_MS = "3600000"
+  MAX_JOB_TITLES_LENGTH = "100"
+  RATE_LIMIT_JOBS_PER_HOUR = "10"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 200
+    hard_limit = 250
+
+[[http_service.checks]]
+  grace_period = "10s"
+  interval = "30s"
+  method = "GET"
+  timeout = "5s"
+  path = "/"
+
+[[mounts]]
+  source = "fastclip_data"
+  destination = "/app/data"
+
+# Free tier: shared-cpu-1x with 256MB RAM
+# If video rendering fails due to memory, scale up with:
+# fly scale memory 512
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1

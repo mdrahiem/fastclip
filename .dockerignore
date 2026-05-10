@@ -1,0 +1,16 @@
+node_modules
+*.log
+data
+.env
+.env.local
+.env.production
+.git
+.gitignore
+README.md
+Dockerfile
+.dockerignore
+fly.toml
+.github
+.vscode
+*.md
+!docs/
