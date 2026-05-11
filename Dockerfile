@@ -87,10 +87,14 @@ RUN chmod +x /app/docker-start.sh
 
 # Set production environment
 ENV NODE_ENV=production
-ENV DATABASE_URL=file:./data/app.db
+# Absolute path required: prisma commands and server may run from different directories
+ENV DATABASE_URL=file:/app/data/app.db
 ENV HYPERFRAMES_CLI_PATH=hyperframes
 ENV PUBLIC_MUSIC_PATH=./apps/web/public/music/default.mp3
 ENV PORT=8080
+# IMPORTANT: Change this to a secure random string before production use
+# Generate with: openssl rand -base64 32
+ENV SESSION_SECRET=fastclip-change-me-before-production-use-secure-random-string
 
 # Expose port
 EXPOSE 8080

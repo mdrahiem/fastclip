@@ -8,12 +8,16 @@ swap_size_mb = 1024
 [env]
   NODE_ENV = "production"
   PORT = "8080"
-  DATABASE_URL = "file:./data/app.db"
+  # Absolute path required: prisma commands and server may run from different directories
+  DATABASE_URL = "file:/app/data/app.db"
   HYPERFRAMES_CLI_PATH = "hyperframes"
   PUBLIC_MUSIC_PATH = "./apps/web/public/music/default.mp3"
   JOB_RETENTION_MS = "3600000"
   MAX_JOB_TITLES_LENGTH = "100"
   RATE_LIMIT_JOBS_PER_HOUR = "10"
+  # IMPORTANT: Change this to a secure random string before production use
+  # Generate with: openssl rand -base64 32
+  SESSION_SECRET = "fastclip-change-me-before-production-use-secure-random-string"
 
 [http_service]
   internal_port = 8080

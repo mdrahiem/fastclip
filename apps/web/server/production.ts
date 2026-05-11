@@ -5,12 +5,14 @@
 import { createServer } from "http";
 import { readFile } from "fs/promises";
 import { existsSync } from "fs";
-import { join, extname } from "path";
+import { join, extname, dirname } from "path";
+import { fileURLToPath } from "url";
 import { handleApiRequest } from "./api-handler";
 import { startWorker } from "./worker";
 
 const PORT = process.env.PORT || 8080;
-const STATIC_DIR = join(process.cwd(), "dist");
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const STATIC_DIR = join(__dirname, "../../dist");
 
 const MIME_TYPES: Record<string, string> = {
   ".html": "text/html",
@@ -87,8 +89,14 @@ const server = createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, "0.0.0.0", () => {
-  console.log(`[server] Production server running on port ${PORT}`);
+server.on("error", (err) => {
+  console.error("[server] failed to bind:", err);
+  process.exit(1);
+});
+
+server.listen(PORT, () => {
+  const addr = server.address();
+  console.log(`[server] Production server running on port ${PORT}`, addr);
 });
 
 // Start background worker in the same process
