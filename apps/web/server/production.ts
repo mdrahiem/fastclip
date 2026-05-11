@@ -12,7 +12,7 @@ import { startWorker } from "./worker";
 
 const PORT = process.env.PORT || 8080;
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const STATIC_DIR = join(__dirname, "../../dist");
+const STATIC_DIR = join(__dirname, "../dist");
 
 const MIME_TYPES: Record<string, string> = {
   ".html": "text/html",
@@ -94,7 +94,7 @@ server.on("error", (err) => {
   process.exit(1);
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, "0.0.0.0", () => {
   const addr = server.address();
   console.log(`[server] Production server running on port ${PORT}`, addr);
 });
