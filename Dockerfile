@@ -5,7 +5,6 @@ FROM node:20-slim
 
 # Install system dependencies for Chrome/Chromium and video processing
 RUN apt-get update && apt-get install -y \
-    chromium \
     ffmpeg \
     fonts-liberation \
     libappindicator3-1 \
@@ -43,12 +42,21 @@ RUN apt-get update && apt-get install -y \
     lsb-release \
     wget \
     xdg-utils \
+    gnupg \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Google Chrome (not Debian chromium) — required for HeadlessExperimental.beginFrame
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
+    && apt-get update \
+    && apt-get install -y google-chrome-stable \
     && rm -rf /var/lib/apt/lists/*
 
 # Set Chrome environment variables for HyperFrames
-ENV CHROME_BIN=/usr/bin/chromium
+ENV CHROME_BIN=/usr/bin/google-chrome-stable
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
 
 # Install pnpm globally
 RUN npm install -g pnpm@9
