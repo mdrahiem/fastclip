@@ -42,10 +42,8 @@ swap_size_mb = 1024
   source = "fastclip_data"
   destination = "/app/data"
 
-# Free tier: shared-cpu-1x with 256MB RAM
-# If video rendering fails due to memory, scale up with:
-# fly scale memory 512
+# Scaled up for video rendering (Chromium + ffmpeg need 2GB+ RAM)
 [[vm]]
-  memory = "256mb"
+  memory = "2048mb"
   cpu_kind = "shared"
-  cpus = 1
+  cpus = 2
